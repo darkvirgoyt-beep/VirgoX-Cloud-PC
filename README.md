@@ -78,6 +78,22 @@ The Web Page includes a custom virtual trackpad designed specifically for touchs
 
 ---
 
+## ☁️ Cloud Storage & Cloud RAM Architecture (Zero Local Device Usage)
+
+* **💾 100% Cloud Storage:**
+  * All browser downloads, Git repositories, ROM files, payload extractions, and caches are stored directly on the Cloud VM filesystem (`/home/darkvirgoyt/Downloads` and `/config/Desktop/VirgoX-Files/Downloads`).
+  * Google Chrome is configured with `prompt_for_download: false` and auto-saves directly to `/config/Desktop/VirgoX-Files/Downloads`.
+  * **0 MB used on your phone storage.**
+* **🧠 100% Cloud RAM & CPU:**
+  * All active apps, Chrome tabs, compilers, and Docker services run using the Cloud VM's **8 GB RAM** and multi-core CPU.
+  * Your phone only acts as a thin-client display controller. No phone lag, no device heating, and zero battery drain from heavy builds.
+* **🤖 AI Agent Vision & File Execution:**
+  * Because all files are stored in the shared cloud workspace, the AI assistant (Antigravity) can instantly view, edit, inspect, and execute any file:
+    * ROM zips, payloads, scripts, and APKs can be inspected and run directly via CLI or Desktop.
+    * The AI agent can compile code, run fastboot commands, and manage builds on the cloud PC on your behalf.
+
+---
+
 ## 🤖 Instructions for AI Assistants (How to Connect & Control in Future Sessions)
 
 When resuming or starting a new session with this repository, the AI assistant can immediately take full control using the following steps:
