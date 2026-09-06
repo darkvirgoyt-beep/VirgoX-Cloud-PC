@@ -897,6 +897,127 @@ html, body {
   box-shadow: 0 0 12px var(--neon-amber);
 }
 
+/* Keyboard Drawer */
+.keyboard-drawer {
+  position: absolute;
+  bottom: 46px;
+  left: 0;
+  right: 0;
+  background: #0d121c;
+  border-top: 2px solid var(--neon-cyan);
+  box-shadow: 0 -4px 20px rgba(0, 229, 255, 0.25);
+  z-index: 150;
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  animation: slideUp 0.2s ease-out;
+}
+
+.keyboard-drawer.hidden {
+  display: none;
+}
+
+.kb-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--neon-cyan);
+  font-weight: 700;
+}
+
+.kb-input-row {
+  display: flex;
+  gap: 8px;
+}
+
+.kb-input {
+  flex: 1;
+  font-size: 0.95rem;
+  padding: 10px 12px;
+}
+
+.kb-shortcuts-row {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  scrollbar-width: none;
+}
+
+.kb-shortcuts-row::-webkit-scrollbar {
+  display: none;
+}
+
+.kb-key-btn {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #fff;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: bold;
+  padding: 6px 10px;
+  border-radius: 4px;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.kb-key-btn:active {
+  background: var(--neon-cyan);
+  color: #000;
+}
+
+.mouse-btn.kb-btn {
+  border-color: rgba(0, 229, 255, 0.4);
+  color: var(--neon-cyan);
+}
+
+.mouse-btn.kb-btn.active {
+  background: var(--neon-cyan);
+  color: #000;
+  box-shadow: 0 0 10px var(--neon-cyan);
+}
+
+/* Screen Wrapper Portrait Mode */
+.screen-wrapper.portrait-mode {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #06080e;
+}
+
+.screen-wrapper.portrait-mode iframe {
+  width: 100%;
+  max-width: 560px;
+  height: 100%;
+  margin: 0 auto;
+}
+
+/* Mobile Portrait Optimization (Handheld Console Layout) */
+@media (max-width: 768px) and (orientation: portrait) {
+  .viewport-container {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .screen-wrapper {
+    flex: 1.2;
+    min-height: 42vh;
+  }
+
+  .quick-mouse-bar {
+    height: 52px;
+  }
+
+  .mouse-btn {
+    height: 40px;
+    font-size: 0.78rem;
+  }
+}
+
 /* Mobile Responsiveness */
 @media (max-width: 600px) {
   .status-indicators {
@@ -908,5 +1029,10 @@ html, body {
   .apps-grid {
     grid-template-columns: 1fr;
   }
+}
+
+@keyframes slideUp {
+  from { transform: translateY(100%); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
 }
 

@@ -55,7 +55,7 @@ class BridgeHandler(BaseHTTPRequestHandler):
 
         elif path == "/api/screenshot":
             # Capture screenshot
-            run_container_cmd("scrot -o /config/Desktop/VirgoX-Files/current_screen.png", user="darkvirgoyt")
+            run_container_cmd("scrot -o /config/Desktop/VirgoX-Files/current_screen.png", user="abc")
             img_path = "/home/darkvirgoyt/current_screen.png"
             if os.path.exists(img_path):
                 with open(img_path, "rb") as f:
@@ -106,17 +106,46 @@ class BridgeHandler(BaseHTTPRequestHandler):
             run_container_cmd(f"xdotool {action} 1")
             self._respond_ok({"drag_state": state})
 
+        elif path == "/api/type":
+            text = payload.get("text", "")
+            if text:
+                escaped = text.replace('"', '\\"').replace("'", "\\'")
+                run_container_cmd(f'xdotool type --delay 12 -- "{escaped}"')
+            self._respond_ok({"typed": len(text)})
+
+        elif path == "/api/resolution":
+            mode = payload.get("mode", "landscape")
+            if mode == "portrait":
+                run_container_cmd("xrandr --newmode '720x1280_60.00' 74.50 720 748 768 800 1280 1283 1288 1320 -hsync +vsync 2>/dev/null || true; xrandr --addmode screen '720x1280_60.00' 2>/dev/null || true; xrandr --output screen --mode '720x1280_60.00' 2>/dev/null || xrandr -s 720x1280 2>/dev/null || true")
+            else:
+                run_container_cmd("xrandr --output screen --mode '1280x720_60.00' 2>/dev/null || xrandr -s 1280x720 2>/dev/null || xrandr -s 1920x1080 2>/dev/null || true")
+            self._respond_ok({"resolution_mode": mode})
+
         elif path == "/api/launch":
             app = payload.get("app", "")
             if app == "chrome":
-                run_container_cmd("wmctrl -xa google-chrome || google-chrome-stable --no-sandbox --disable-dev-shm-usage https://github.com/login &")
+                run_container_cmd("wmctrl -xa google-chrome || google-chrome-stable --disable-dev-shm-usage https://github.com &")
             elif app == "files":
                 run_container_cmd("thunar /config/Desktop/VirgoX-Files &")
             elif app == "taskmgr":
                 run_container_cmd("xfce4-taskmanager &")
             elif app == "adb":
                 run_container_cmd("xfce4-terminal -e 'adb devices' &")
+            elif app == "ms_store":
+                run_container_cmd("google-chrome-stable --disable-dev-shm-usage --app=https://apps.microsoft.com &")
+            elif app == "ms_office":
+                run_container_cmd("google-chrome-stable --disable-dev-shm-usage --app=https://www.office.com &")
+            elif app == "flathub":
+                run_container_cmd("google-chrome-stable --disable-dev-shm-usage --app=https://flathub.org/apps &")
+            elif app == "synaptic":
+                run_container_cmd("synaptic &")
             self._respond_ok({"launched": app})
+
+        elif path == "/api/key":
+            key = payload.get("key", "")
+            if key:
+                run_container_cmd(f"xdotool key {key}")
+            self._respond_ok({"key_pressed": key})
 
         elif path == "/api/term_key":
             key = payload.get("key", "")

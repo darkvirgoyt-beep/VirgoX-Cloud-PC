@@ -10,7 +10,7 @@
   const DEFAULT_CONFIG = {
     desktopUrl: 'https://former-warranties-chance-consortium.trycloudflare.com',
     terminalUrl: 'https://actors-garlic-cookies-starts.trycloudflare.com',
-    bridgeUrl: 'http://localhost:8888',
+    bridgeUrl: 'https://adventure-vocal-paragraph-betting.trycloudflare.com',
     sensitivity: 1.5,
     crosshairEnabled: false
   };
@@ -23,6 +23,8 @@
     isHandMode: false,
     pan: { x: 0, y: 0 },
     isDragLocked: false,
+    orientation: 'landscape',
+    keyboardOpen: false,
     crosshair: { x: 50, y: 50 }, // percentage
     touchStartDist: 0,
     pinchStartDist: 0
@@ -34,6 +36,15 @@
       const saved = localStorage.getItem('virgox_pc_config');
       if (saved) {
         state.config = { ...DEFAULT_CONFIG, ...JSON.parse(saved) };
+        if (state.config.desktopUrl && state.config.desktopUrl.includes('pinggy')) {
+          state.config.desktopUrl = DEFAULT_CONFIG.desktopUrl;
+        }
+        if (state.config.terminalUrl && state.config.terminalUrl.includes('pinggy')) {
+          state.config.terminalUrl = DEFAULT_CONFIG.terminalUrl;
+        }
+        if (!state.config.bridgeUrl || state.config.bridgeUrl === 'http://localhost:8888') {
+          state.config.bridgeUrl = DEFAULT_CONFIG.bridgeUrl;
+        }
       }
     } catch (e) {
       console.warn('Failed to parse config from localStorage', e);
@@ -108,6 +119,8 @@
     setupFrames();
     setupTabs();
     setupHandMode();
+    setupKeyboard();
+    setupOrientation();
     setupTouchpad();
     setupZoom();
     setupCrosshair();
@@ -365,6 +378,120 @@
     const scale = state.zoomLevel / 100;
     desktopFrame.style.transform = `translate(${state.pan.x}px, ${state.pan.y}px) scale(${scale})`;
     desktopFrame.style.transformOrigin = 'center center';
+  }
+
+  // Mobile Keyboard Bridge Drawer
+  function setupKeyboard() {
+    const btnToggleKeyboard = document.getElementById('btn-toggle-keyboard');
+    const dockBtnKeyboard = document.getElementById('dock-btn-keyboard');
+    const closeKeyboard = document.getElementById('close-keyboard');
+    const keyboardDrawer = document.getElementById('keyboard-drawer');
+    const mobileTextInput = document.getElementById('mobile-text-input');
+    const btnSendText = document.getElementById('btn-send-text');
+
+    function toggleKeyboard(show) {
+      const isOpen = typeof show === 'boolean' ? show : keyboardDrawer.classList.contains('hidden');
+      if (isOpen) {
+        keyboardDrawer.classList.remove('hidden');
+        if (dockBtnKeyboard) dockBtnKeyboard.classList.add('active');
+        if (btnToggleKeyboard) btnToggleKeyboard.classList.add('active');
+        state.keyboardOpen = true;
+        setTimeout(() => {
+          if (mobileTextInput) mobileTextInput.focus();
+        }, 100);
+      } else {
+        keyboardDrawer.classList.add('hidden');
+        if (dockBtnKeyboard) dockBtnKeyboard.classList.remove('active');
+        if (btnToggleKeyboard) btnToggleKeyboard.classList.remove('active');
+        state.keyboardOpen = false;
+        if (mobileTextInput) mobileTextInput.blur();
+      }
+    }
+
+    if (btnToggleKeyboard) {
+      btnToggleKeyboard.addEventListener('click', () => toggleKeyboard());
+    }
+    if (dockBtnKeyboard) {
+      dockBtnKeyboard.addEventListener('click', () => toggleKeyboard());
+    }
+    if (closeKeyboard) {
+      closeKeyboard.addEventListener('click', () => toggleKeyboard(false));
+    }
+
+    function sendCurrentText() {
+      if (!mobileTextInput) return;
+      const val = mobileTextInput.value;
+      if (val) {
+        sendAction('type', { text: val });
+        mobileTextInput.value = '';
+      }
+      mobileTextInput.focus();
+    }
+
+    if (btnSendText) {
+      btnSendText.addEventListener('click', sendCurrentText);
+    }
+
+    if (mobileTextInput) {
+      mobileTextInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          sendCurrentText();
+          sendAction('key', { key: 'Return' });
+        }
+      });
+    }
+
+    document.querySelectorAll('.kb-key-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        const key = btn.dataset.key;
+        if (key) {
+          sendAction('key', { key });
+        }
+        if (mobileTextInput && state.keyboardOpen) {
+          mobileTextInput.focus();
+        }
+      });
+    });
+  }
+
+  // Portrait & Landscape Orientation Switcher
+  function setupOrientation() {
+    const btnOrientation = document.getElementById('btn-orientation');
+    const desktopWrapper = document.getElementById('desktop-wrapper');
+
+    function applyOrientation(mode) {
+      state.orientation = mode;
+      if (mode === 'portrait') {
+        if (btnOrientation) {
+          btnOrientation.textContent = '🖥️ Landscape';
+          btnOrientation.classList.add('neon-cyan');
+          btnOrientation.classList.remove('neon-purple');
+        }
+        if (desktopWrapper) {
+          desktopWrapper.classList.add('portrait-mode');
+        }
+        sendAction('resolution', { mode: 'portrait' });
+      } else {
+        if (btnOrientation) {
+          btnOrientation.textContent = '📱 Portrait';
+          btnOrientation.classList.add('neon-purple');
+          btnOrientation.classList.remove('neon-cyan');
+        }
+        if (desktopWrapper) {
+          desktopWrapper.classList.remove('portrait-mode');
+        }
+        sendAction('resolution', { mode: 'landscape' });
+      }
+    }
+
+    if (btnOrientation) {
+      btnOrientation.addEventListener('click', () => {
+        const nextMode = state.orientation === 'landscape' ? 'portrait' : 'landscape';
+        applyOrientation(nextMode);
+      });
+    }
   }
 
   // Zoom Handling

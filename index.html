@@ -85,6 +85,8 @@
           </div>
           
           <div class="mode-toggles">
+            <button id="btn-orientation" class="cyber-btn xs neon-purple" title="Toggle Portrait / Landscape">📱 Portrait</button>
+            <button id="btn-toggle-keyboard" class="cyber-btn xs neon-cyan" title="Open Phone Keyboard">⌨️ Type</button>
             <button id="btn-hand-mode" class="cyber-btn xs neon-amber" title="Toggle Hand Pan/Travel Mode">
               ✋ Hand: <span id="hand-state">OFF</span>
             </button>
@@ -115,12 +117,36 @@
 
         <!-- Touchpad Floating Dock (for Desktop View) -->
         <div class="quick-mouse-bar">
-          <button id="dock-btn-hand" class="mouse-btn hand-btn">✋ TRAVEL (PAN)</button>
+          <button id="dock-btn-keyboard" class="mouse-btn kb-btn">⌨️ TYPE</button>
+          <button id="dock-btn-hand" class="mouse-btn hand-btn">✋ TRAVEL</button>
           <button id="btn-left-click" class="mouse-btn">L-CLICK</button>
           <button id="btn-drag-lock" class="mouse-btn drag-btn">DRAG LOCK</button>
           <button id="btn-scroll-up" class="mouse-btn">▲ SCROLL</button>
           <button id="btn-scroll-down" class="mouse-btn">▼ SCROLL</button>
           <button id="btn-right-click" class="mouse-btn">R-CLICK</button>
+        </div>
+
+        <!-- Mobile Virtual Keyboard Drawer -->
+        <div id="keyboard-drawer" class="keyboard-drawer hidden">
+          <div class="kb-header">
+            <span>⌨️ MOBILE KEYBOARD BRIDGE (SEND TO PC)</span>
+            <button id="close-keyboard" class="cyber-btn xs">&times;</button>
+          </div>
+          <div class="kb-input-row">
+            <input type="text" id="mobile-text-input" class="cyber-input kb-input" placeholder="Type here (opens your phone keyboard)..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+            <button id="btn-send-text" class="cyber-btn sm neon-cyan">SEND</button>
+          </div>
+          <div class="kb-shortcuts-row">
+            <button class="kb-key-btn" data-key="Return">ENTER ↵</button>
+            <button class="kb-key-btn" data-key="BackSpace">⌫ BACK</button>
+            <button class="kb-key-btn" data-key="space">SPACE</button>
+            <button class="kb-key-btn" data-key="Tab">TAB ⇥</button>
+            <button class="kb-key-btn" data-key="Escape">ESC</button>
+            <button class="kb-key-btn" data-key="ctrl+a">SELECT ALL</button>
+            <button class="kb-key-btn" data-key="ctrl+c">COPY</button>
+            <button class="kb-key-btn" data-key="ctrl+v">PASTE</button>
+            <button class="kb-key-btn" data-key="ctrl+z">UNDO</button>
+          </div>
         </div>
       </section>
 
@@ -250,6 +276,42 @@
                 <p>Monitor container CPU, memory, and running tasks.</p>
               </div>
               <button class="cyber-btn sm" onclick="focusApp('taskmgr')">MONITOR</button>
+            </div>
+
+            <div class="app-card" id="card-ms-store">
+              <div class="app-icon">🛍️</div>
+              <div class="app-info">
+                <h4>Microsoft Store (Web)</h4>
+                <p>Browse & install Microsoft Web Store apps and games.</p>
+              </div>
+              <button class="cyber-btn sm neon-cyan" onclick="focusApp('ms_store')">OPEN STORE</button>
+            </div>
+
+            <div class="app-card" id="card-ms-office">
+              <div class="app-icon">📝</div>
+              <div class="app-info">
+                <h4>Microsoft 365 (Office)</h4>
+                <p>Word, Excel, PowerPoint, and OneDrive online.</p>
+              </div>
+              <button class="cyber-btn sm neon-amber" onclick="focusApp('ms_office')">OPEN OFFICE</button>
+            </div>
+
+            <div class="app-card" id="card-flathub">
+              <div class="app-icon">🛒</div>
+              <div class="app-info">
+                <h4>Flathub Linux Store</h4>
+                <p>Thousands of popular Linux games & apps.</p>
+              </div>
+              <button class="cyber-btn sm neon-green" onclick="focusApp('flathub')">OPEN FLATHUB</button>
+            </div>
+
+            <div class="app-card" id="card-synaptic">
+              <div class="app-icon">📦</div>
+              <div class="app-info">
+                <h4>Linux Software Center</h4>
+                <p>Synaptic graphical package manager for Ubuntu.</p>
+              </div>
+              <button class="cyber-btn sm neon-purple" onclick="focusApp('synaptic')">OPEN SOFTWARE</button>
             </div>
           </div>
 
