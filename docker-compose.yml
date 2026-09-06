@@ -1,0 +1,19 @@
+version: "3.8"
+
+services:
+  desktop:
+    image: lscr.io/linuxserver/webtop:ubuntu-xfce
+    container_name: virgox-desktop
+    privileged: true
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Etc/UTC
+      - TITLE=VirgoX Cloud PC
+    volumes:
+      - /home/darkvirgoyt:/config/Desktop/VirgoX-Files
+    ports:
+      - "3000:3000"
+      - "3001:3001"
+    shm_size: "2gb"
+    restart: unless-stopped

@@ -1,0 +1,429 @@
+/* ==========================================================================
+   ⚡ VirgoX Cloud Computer — Interactive Application Controller
+   Developer: Prince · VirgoYT (@darkvirgoyt-beep)
+   ========================================================================== */
+
+(function () {
+  'use strict';
+
+  // Default Configuration
+  const DEFAULT_CONFIG = {
+    desktopUrl: 'https://bzlbb-136-85-52-180.run.pinggy-free.link',
+    terminalUrl: 'https://misgt-136-85-52-180.run.pinggy-free.link',
+    bridgeUrl: 'http://localhost:8888',
+    sensitivity: 1.5,
+    crosshairEnabled: false
+  };
+
+  // State
+  let state = {
+    config: { ...DEFAULT_CONFIG },
+    activeTab: 'desktop',
+    zoomLevel: 100,
+    isDragLocked: false,
+    crosshair: { x: 50, y: 50 }, // percentage
+    touchStartDist: 0
+  };
+
+  // Load Saved Config from LocalStorage
+  function loadConfig() {
+    try {
+      const saved = localStorage.getItem('virgox_pc_config');
+      if (saved) {
+        state.config = { ...DEFAULT_CONFIG, ...JSON.parse(saved) };
+      }
+    } catch (e) {
+      console.warn('Failed to parse config from localStorage', e);
+    }
+  }
+
+  // Save Config to LocalStorage
+  function saveConfig() {
+    try {
+      localStorage.setItem('virgox_pc_config', JSON.stringify(state.config));
+    } catch (e) {
+      console.warn('Failed to save config', e);
+    }
+  }
+
+  // DOM Elements
+  const tabs = document.querySelectorAll('.tab-btn');
+  const tabContents = document.querySelectorAll('.tab-content');
+  const desktopFrame = document.getElementById('desktop-frame');
+  const terminalFrame = document.getElementById('terminal-frame');
+  const splitDesktopFrame = document.getElementById('split-desktop-frame');
+  const splitTerminalFrame = document.getElementById('split-terminal-frame');
+  
+  // Crosshair Elements
+  const toggleCrosshairBtn = document.getElementById('toggle-crosshair');
+  const crosshairStateText = document.getElementById('crosshair-state');
+  const crosshairTarget = document.getElementById('crosshair-target');
+  const crosshairCoords = document.getElementById('crosshair-coords');
+
+  // Zoom Controls
+  const zoomInBtn = document.getElementById('zoom-in');
+  const zoomOutBtn = document.getElementById('zoom-out');
+  const zoomResetBtn = document.getElementById('zoom-reset');
+  const zoomLevelText = document.getElementById('zoom-level');
+
+  // Touchpad Elements
+  const touchpadSurface = document.getElementById('touchpad-surface');
+  const touchpadPointer = document.getElementById('touchpad-pointer');
+  const mouseSensInput = document.getElementById('mouse-sens');
+  const sensValText = document.getElementById('sens-val');
+  const padLeftClick = document.getElementById('pad-left-click');
+  const padDoubleClick = document.getElementById('pad-double-click');
+  const padRightClick = document.getElementById('pad-right-click');
+  const btnDragLock = document.getElementById('btn-drag-lock');
+
+  // Settings Modal Elements
+  const btnSettings = document.getElementById('btn-settings');
+  const settingsModal = document.getElementById('settings-modal');
+  const closeSettingsBtn = document.getElementById('close-settings');
+  const inputDesktopUrl = document.getElementById('input-desktop-url');
+  const inputTerminalUrl = document.getElementById('input-terminal-url');
+  const inputBridgeUrl = document.getElementById('input-bridge-url');
+  const btnSaveSettings = document.getElementById('btn-save-settings');
+  const btnResetDefaults = document.getElementById('btn-reset-defaults');
+  const linkPhone1 = document.getElementById('link-phone1');
+  const linkPhone2 = document.getElementById('link-phone2');
+
+  // Screenshot Inspector
+  const btnRefreshScreen = document.getElementById('btn-refresh-screen');
+  const screenImg = document.getElementById('screen-img');
+  const snapshotTime = document.getElementById('snapshot-time');
+
+  // Initialize
+  function init() {
+    loadConfig();
+    setupFrames();
+    setupTabs();
+    setupTouchpad();
+    setupZoom();
+    setupCrosshair();
+    setupQuickKeys();
+    setupSettingsModal();
+    setupFullscreen();
+    checkConnectionStatus();
+  }
+
+  // Setup Iframes with URLs
+  function setupFrames() {
+    if (state.config.desktopUrl) {
+      desktopFrame.src = state.config.desktopUrl;
+      splitDesktopFrame.src = state.config.desktopUrl;
+      linkPhone2.href = state.config.desktopUrl;
+    }
+    if (state.config.terminalUrl) {
+      terminalFrame.src = state.config.terminalUrl;
+      splitTerminalFrame.src = state.config.terminalUrl;
+      linkPhone1.href = state.config.terminalUrl;
+    }
+
+    document.getElementById('open-external-desktop').addEventListener('click', () => {
+      window.open(state.config.desktopUrl, '_blank');
+    });
+
+    document.getElementById('open-external-terminal').addEventListener('click', () => {
+      window.open(state.config.terminalUrl, '_blank');
+    });
+
+    document.getElementById('reload-desktop').addEventListener('click', () => {
+      desktopFrame.src = state.config.desktopUrl;
+    });
+
+    document.getElementById('reload-terminal').addEventListener('click', () => {
+      terminalFrame.src = state.config.terminalUrl;
+    });
+  }
+
+  // Navigation Tabs
+  function setupTabs() {
+    tabs.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const targetTab = btn.dataset.tab;
+        tabs.forEach(t => t.classList.remove('active'));
+        tabContents.forEach(c => c.classList.remove('active'));
+
+        btn.classList.add('active');
+        const targetContent = document.getElementById(`tab-${targetTab}`);
+        if (targetContent) targetContent.classList.add('active');
+        state.activeTab = targetTab;
+      });
+    });
+  }
+
+  // Crosshair Logic
+  function setupCrosshair() {
+    updateCrosshairUI();
+
+    toggleCrosshairBtn.addEventListener('click', () => {
+      state.config.crosshairEnabled = !state.config.crosshairEnabled;
+      updateCrosshairUI();
+      saveConfig();
+    });
+  }
+
+  function updateCrosshairUI() {
+    if (state.config.crosshairEnabled) {
+      crosshairStateText.textContent = 'ON';
+      crosshairStateText.style.color = '#00ff66';
+      crosshairTarget.classList.remove('hidden');
+    } else {
+      crosshairStateText.textContent = 'OFF';
+      crosshairStateText.style.color = '#ff4444';
+      crosshairTarget.classList.add('hidden');
+    }
+    renderCrosshairPosition();
+  }
+
+  function renderCrosshairPosition() {
+    crosshairTarget.style.left = `${state.crosshair.x}%`;
+    crosshairTarget.style.top = `${state.crosshair.y}%`;
+    const pxX = Math.round((state.crosshair.x / 100) * 1920);
+    const pxY = Math.round((state.crosshair.y / 100) * 1080);
+    crosshairCoords.textContent = `X: ${pxX} | Y: ${pxY}`;
+  }
+
+  // Touchpad Gestures & Pinch-to-Zoom
+  function setupTouchpad() {
+    let lastX = 0;
+    let lastY = 0;
+    let isTouching = false;
+
+    mouseSensInput.value = state.config.sensitivity;
+    sensValText.textContent = `${state.config.sensitivity}x`;
+
+    mouseSensInput.addEventListener('input', (e) => {
+      state.config.sensitivity = parseFloat(e.target.value);
+      sensValText.textContent = `${state.config.sensitivity}x`;
+      saveConfig();
+    });
+
+    // Helper: Distance between 2 touches for pinch
+    function getTouchDistance(t1, t2) {
+      const dx = t1.clientX - t2.clientX;
+      const dy = t1.clientY - t2.clientY;
+      return Math.sqrt(dx * dx + dy * dy);
+    }
+
+    touchpadSurface.addEventListener('touchstart', (e) => {
+      isTouching = true;
+      if (e.touches.length === 1) {
+        lastX = e.touches[0].clientX;
+        lastY = e.touches[0].clientY;
+        touchpadPointer.classList.remove('hidden');
+        updatePointer(e.touches[0]);
+      } else if (e.touches.length === 2) {
+        state.touchStartDist = getTouchDistance(e.touches[0], e.touches[1]);
+      }
+    }, { passive: false });
+
+    touchpadSurface.addEventListener('touchmove', (e) => {
+      e.preventDefault();
+      if (!isTouching) return;
+
+      if (e.touches.length === 1) {
+        const touch = e.touches[0];
+        const dx = (touch.clientX - lastX) * state.config.sensitivity;
+        const dy = (touch.clientY - lastY) * state.config.sensitivity;
+
+        lastX = touch.clientX;
+        lastY = touch.clientY;
+
+        // Move Crosshair
+        state.crosshair.x = Math.max(0, Math.min(100, state.crosshair.x + (dx / window.innerWidth) * 100));
+        state.crosshair.y = Math.max(0, Math.min(100, state.crosshair.y + (dy / window.innerHeight) * 100));
+
+        renderCrosshairPosition();
+        updatePointer(touch);
+
+        // Send to Bridge API if active
+        sendMouseDelta(dx, dy);
+
+      } else if (e.touches.length === 2) {
+        // Pinch to Zoom
+        const dist = getTouchDistance(e.touches[0], e.touches[1]);
+        const delta = dist - state.touchStartDist;
+        if (Math.abs(delta) > 10) {
+          if (delta > 0) {
+            applyZoom(state.zoomLevel + 5);
+          } else {
+            applyZoom(state.zoomLevel - 5);
+          }
+          state.touchStartDist = dist;
+        }
+      }
+    }, { passive: false });
+
+    touchpadSurface.addEventListener('touchend', (e) => {
+      if (e.touches.length === 0) {
+        isTouching = false;
+        touchpadPointer.classList.add('hidden');
+      }
+    });
+
+    function updatePointer(touch) {
+      const rect = touchpadSurface.getBoundingClientRect();
+      const x = touch.clientX - rect.left;
+      const y = touch.clientY - rect.top;
+      touchpadPointer.style.left = `${x}px`;
+      touchpadPointer.style.top = `${y}px`;
+    }
+
+    // Touchpad Click Buttons
+    padLeftClick.addEventListener('click', () => sendAction('mouse_click', { button: 1 }));
+    padRightClick.addEventListener('click', () => sendAction('mouse_click', { button: 3 }));
+    padDoubleClick.addEventListener('click', () => sendAction('mouse_click', { button: 1, double: true }));
+
+    // Desktop View Floating Mouse Buttons
+    document.getElementById('btn-left-click').addEventListener('click', () => sendAction('mouse_click', { button: 1 }));
+    document.getElementById('btn-right-click').addEventListener('click', () => sendAction('mouse_click', { button: 3 }));
+    document.getElementById('btn-scroll-up').addEventListener('click', () => sendAction('mouse_click', { button: 4 }));
+    document.getElementById('btn-scroll-down').addEventListener('click', () => sendAction('mouse_click', { button: 5 }));
+
+    btnDragLock.addEventListener('click', () => {
+      state.isDragLocked = !state.isDragLocked;
+      btnDragLock.classList.toggle('active', state.isDragLocked);
+      btnDragLock.textContent = state.isDragLocked ? 'DRAGGING...' : 'DRAG LOCK';
+      sendAction('mouse_drag', { state: state.isDragLocked ? 'down' : 'up' });
+    });
+  }
+
+  // Zoom Handling
+  function setupZoom() {
+    zoomInBtn.addEventListener('click', () => applyZoom(state.zoomLevel + 15));
+    zoomOutBtn.addEventListener('click', () => applyZoom(state.zoomLevel - 15));
+    zoomResetBtn.addEventListener('click', () => applyZoom(100));
+  }
+
+  function applyZoom(val) {
+    state.zoomLevel = Math.max(50, Math.min(250, val));
+    zoomLevelText.textContent = `${state.zoomLevel}%`;
+    desktopFrame.style.transform = `scale(${state.zoomLevel / 100})`;
+    desktopFrame.style.transformOrigin = 'top left';
+    if (state.zoomLevel > 100) {
+      desktopFrame.style.width = `${100 / (state.zoomLevel / 100)}%`;
+      desktopFrame.style.height = `${100 / (state.zoomLevel / 100)}%`;
+    } else {
+      desktopFrame.style.width = '100%';
+      desktopFrame.style.height = '100%';
+    }
+  }
+
+  // Terminal Quick Keys
+  function setupQuickKeys() {
+    document.querySelectorAll('.term-key').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const key = btn.dataset.key;
+        sendAction('term_key', { key });
+      });
+    });
+  }
+
+  // Settings Modal
+  function setupSettingsModal() {
+    btnSettings.addEventListener('click', () => {
+      inputDesktopUrl.value = state.config.desktopUrl;
+      inputTerminalUrl.value = state.config.terminalUrl;
+      inputBridgeUrl.value = state.config.bridgeUrl || '';
+      settingsModal.classList.remove('hidden');
+    });
+
+    closeSettingsBtn.addEventListener('click', () => {
+      settingsModal.classList.add('hidden');
+    });
+
+    btnSaveSettings.addEventListener('click', () => {
+      state.config.desktopUrl = inputDesktopUrl.value.trim();
+      state.config.terminalUrl = inputTerminalUrl.value.trim();
+      state.config.bridgeUrl = inputBridgeUrl.value.trim();
+      saveConfig();
+      setupFrames();
+      settingsModal.classList.add('hidden');
+      alert('⚡ Settings saved! Live connection reloaded.');
+    });
+
+    btnResetDefaults.addEventListener('click', () => {
+      if (confirm('Reset connection URLs to defaults?')) {
+        state.config = { ...DEFAULT_CONFIG };
+        saveConfig();
+        inputDesktopUrl.value = state.config.desktopUrl;
+        inputTerminalUrl.value = state.config.terminalUrl;
+        inputBridgeUrl.value = state.config.bridgeUrl;
+        setupFrames();
+      }
+    });
+  }
+
+  // Fullscreen
+  function setupFullscreen() {
+    const btn = document.getElementById('btn-fullscreen');
+    btn.addEventListener('click', () => {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(err => console.log(err));
+        btn.textContent = '✖';
+      } else {
+        document.exitFullscreen();
+        btn.textContent = '⛶';
+      }
+    });
+  }
+
+  // Remote Bridge API Calls
+  function sendAction(action, payload) {
+    if (!state.config.bridgeUrl) return;
+    fetch(`${state.config.bridgeUrl}/api/${action}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    }).catch(err => {
+      // Bridge is optional; silent catch
+    });
+  }
+
+  function sendMouseDelta(dx, dy) {
+    sendAction('mouse_move', { dx: Math.round(dx), dy: Math.round(dy) });
+  }
+
+  // Live Screen Snapshot
+  btnRefreshScreen.addEventListener('click', refreshSnapshot);
+
+  function refreshSnapshot() {
+    snapshotTime.textContent = 'Capturing...';
+    // If bridge is available, call screenshot endpoint; otherwise reload cached image
+    const timestamp = Date.now();
+    const url = state.config.bridgeUrl ? `${state.config.bridgeUrl}/api/screenshot?t=${timestamp}` : `assets/current_screen.png?t=${timestamp}`;
+    
+    const testImg = new Image();
+    testImg.onload = () => {
+      screenImg.src = url;
+      snapshotTime.textContent = `Updated: ${new Date().toLocaleTimeString()}`;
+    };
+    testImg.onerror = () => {
+      snapshotTime.textContent = 'Snapshot: Offline';
+    };
+    testImg.src = url;
+  }
+
+  // Check Status Indicators
+  function checkConnectionStatus() {
+    const deskDot = document.getElementById('desktop-status');
+    const termDot = document.getElementById('terminal-status');
+
+    if (state.config.desktopUrl) deskDot.classList.add('online');
+    if (state.config.terminalUrl) termDot.classList.add('online');
+  }
+
+  // Global app launcher function
+  window.focusApp = function (appName) {
+    sendAction('launch', { app: appName });
+    // Switch to desktop view
+    const deskTab = document.querySelector('[data-tab="desktop"]');
+    if (deskTab) deskTab.click();
+  };
+
+  // Launch
+  window.addEventListener('DOMContentLoaded', init);
+
+})();

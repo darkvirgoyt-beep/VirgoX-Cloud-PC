@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>VirgoX Cloud Computer — Web Control Suite</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#0a0b10" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600;700&family=Rajdhani:wght@500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+  <!-- App Container -->
+  <div id="app" class="app-container">
+    
+    <!-- Header -->
+    <header class="cyber-header">
+      <div class="brand">
+        <div class="brand-logo">⚡</div>
+        <div class="brand-text">
+          <h1>VIRGOX CLOUD COMPUTER</h1>
+          <span class="version-tag">CYBER OS v2.0 • DUAL PHONE & AI SYNC</span>
+        </div>
+      </div>
+
+      <div class="status-indicators">
+        <div class="indicator-chip" id="desktop-status">
+          <span class="dot"></span>
+          <span class="label">DESKTOP</span>
+        </div>
+        <div class="indicator-chip" id="terminal-status">
+          <span class="dot"></span>
+          <span class="label">TERMINAL</span>
+        </div>
+        <div class="indicator-chip online" id="ai-status">
+          <span class="dot"></span>
+          <span class="label">AI PAIR ACTIVE</span>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <button id="btn-fullscreen" class="cyber-btn sm" title="Toggle Fullscreen">⛶</button>
+        <button id="btn-settings" class="cyber-btn sm neon-cyan" title="Configure URLs & Devices">⚙️</button>
+      </div>
+    </header>
+
+    <!-- Navigation Tabs -->
+    <nav class="cyber-tabs">
+      <button class="tab-btn active" data-tab="desktop">
+        <span class="tab-icon">🖥️</span>
+        <span class="tab-title">Desktop (Phone 2)</span>
+      </button>
+      <button class="tab-btn" data-tab="terminal">
+        <span class="tab-icon">💻</span>
+        <span class="tab-title">Terminal (Phone 1)</span>
+      </button>
+      <button class="tab-btn" data-tab="touchpad">
+        <span class="tab-icon">🎯</span>
+        <span class="tab-title">Touchpad & Mouse</span>
+      </button>
+      <button class="tab-btn" data-tab="split">
+        <span class="tab-icon">🔀</span>
+        <span class="tab-title">Split Dual</span>
+      </button>
+      <button class="tab-btn" data-tab="launcher">
+        <span class="tab-icon">⚡</span>
+        <span class="tab-title">Quick Deck</span>
+      </button>
+    </nav>
+
+    <!-- Main Content Area -->
+    <main class="viewport-container">
+      
+      <!-- DESKTOP TAB -->
+      <section id="tab-desktop" class="tab-content active">
+        <div class="viewer-toolbar">
+          <div class="zoom-controls">
+            <span class="tool-label">ZOOM:</span>
+            <button id="zoom-out" class="cyber-btn xs">-</button>
+            <span id="zoom-level" class="zoom-indicator">100%</span>
+            <button id="zoom-in" class="cyber-btn xs">+</button>
+            <button id="zoom-reset" class="cyber-btn xs">FIT</button>
+          </div>
+          
+          <div class="mode-toggles">
+            <button id="toggle-crosshair" class="cyber-btn xs neon-green">
+              🎯 Crosshair: <span id="crosshair-state">OFF</span>
+            </button>
+            <button id="reload-desktop" class="cyber-btn xs">🔄 Reload</button>
+            <button id="open-external-desktop" class="cyber-btn xs">↗ Open Tab</button>
+          </div>
+        </div>
+
+        <div class="screen-wrapper" id="desktop-wrapper">
+          <!-- Crosshair Overlay -->
+          <div id="crosshair-target" class="crosshair-overlay hidden">
+            <div class="crosshair-h"></div>
+            <div class="crosshair-v"></div>
+            <div class="crosshair-coords" id="crosshair-coords">X: 0 | Y: 0</div>
+          </div>
+
+          <!-- Desktop Frame -->
+          <iframe id="desktop-frame" src="about:blank" allow="autoplay; fullscreen; clipboard-read; clipboard-write" sandbox="allow-forms allow-modals allow-scripts allow-same-origin allow-popups"></iframe>
+        </div>
+
+        <!-- Touchpad Floating Dock (for Desktop View) -->
+        <div class="quick-mouse-bar">
+          <button id="btn-left-click" class="mouse-btn">L-CLICK</button>
+          <button id="btn-drag-lock" class="mouse-btn drag-btn">DRAG LOCK</button>
+          <button id="btn-scroll-up" class="mouse-btn">▲ SCROLL</button>
+          <button id="btn-scroll-down" class="mouse-btn">▼ SCROLL</button>
+          <button id="btn-right-click" class="mouse-btn">R-CLICK</button>
+        </div>
+      </section>
+
+      <!-- TERMINAL TAB -->
+      <section id="tab-terminal" class="tab-content">
+        <div class="viewer-toolbar">
+          <span class="tool-label">TTYD TERMINAL (PORT 7681)</span>
+          <div class="mode-toggles">
+            <button id="reload-terminal" class="cyber-btn xs">🔄 Reload</button>
+            <button id="open-external-terminal" class="cyber-btn xs">↗ Open Tab</button>
+          </div>
+        </div>
+
+        <div class="screen-wrapper">
+          <iframe id="terminal-frame" src="about:blank" allow="autoplay; fullscreen; clipboard-read; clipboard-write" sandbox="allow-forms allow-modals allow-scripts allow-same-origin allow-popups"></iframe>
+        </div>
+
+        <!-- Terminal Quick Keys for Mobile -->
+        <div class="terminal-quick-keys">
+          <button class="term-key" data-key="ctrl-c">CTRL+C</button>
+          <button class="term-key" data-key="tab">TAB</button>
+          <button class="term-key" data-key="arrow-up">▲</button>
+          <button class="term-key" data-key="arrow-down">▼</button>
+          <button class="term-key" data-key="enter">ENTER</button>
+          <button class="term-key" data-key="clear">CLEAR</button>
+        </div>
+      </section>
+
+      <!-- TOUCHPAD & MOUSE CONTROLLER TAB -->
+      <section id="tab-touchpad" class="tab-content">
+        <div class="touchpad-deck">
+          <div class="deck-header">
+            <h3>🎯 VIRTUAL TOUCHPAD & CROSSHAIR CONTROLLER</h3>
+            <p class="subtitle">Drag to navigate mouse cursor • Pinch to zoom desktop • Tap to click</p>
+          </div>
+
+          <!-- The Large Virtual Trackpad Surface -->
+          <div id="touchpad-surface" class="touchpad-surface">
+            <div class="touchpad-grid"></div>
+            <div class="touchpad-instructions">
+              <span class="trackpad-icon">👆</span>
+              <span>DRAG TO GLIDE CURSOR</span>
+              <span class="trackpad-sub">Pinch with two fingers to Zoom In/Out</span>
+            </div>
+            <div id="touchpad-pointer" class="touchpad-pointer hidden"></div>
+          </div>
+
+          <!-- Sensitivity & Controls -->
+          <div class="touchpad-settings-bar">
+            <label for="mouse-sens">SENSITIVITY: <span id="sens-val">1.5x</span></label>
+            <input type="range" id="mouse-sens" min="0.5" max="3.0" step="0.1" value="1.5" />
+          </div>
+
+          <!-- Click Pads -->
+          <div class="touchpad-buttons-grid">
+            <button id="pad-left-click" class="pad-btn left-click-btn">
+              <span class="btn-icon">🖱️</span>
+              <span class="btn-txt">LEFT CLICK (PRIMARY)</span>
+            </button>
+            <button id="pad-double-click" class="pad-btn double-click-btn">
+              <span class="btn-icon">⚡</span>
+              <span class="btn-txt">DOUBLE CLICK</span>
+            </button>
+            <button id="pad-right-click" class="pad-btn right-click-btn">
+              <span class="btn-icon">👆</span>
+              <span class="btn-txt">RIGHT CLICK (MENU)</span>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- SPLIT VIEW TAB -->
+      <section id="tab-split" class="tab-content">
+        <div class="split-wrapper">
+          <div class="split-pane top-pane">
+            <div class="pane-bar">🖥️ DESKTOP SCREEN (PHONE 2 VIEW)</div>
+            <iframe id="split-desktop-frame" src="about:blank" sandbox="allow-forms allow-modals allow-scripts allow-same-origin allow-popups"></iframe>
+          </div>
+          <div class="split-pane bottom-pane">
+            <div class="pane-bar">💻 TERMINAL CLI (PHONE 1 VIEW)</div>
+            <iframe id="split-terminal-frame" src="about:blank" sandbox="allow-forms allow-modals allow-scripts allow-same-origin allow-popups"></iframe>
+          </div>
+        </div>
+      </section>
+
+      <!-- QUICK DECK / LAUNCHER TAB -->
+      <section id="tab-launcher" class="tab-content">
+        <div class="deck-container">
+          <div class="deck-header">
+            <h3>⚡ VIRGOX REMOTE COMPUTER DECK</h3>
+            <p class="subtitle">Quick launchers, system commands, and live screen snapshot</p>
+          </div>
+
+          <!-- App Grid -->
+          <div class="apps-grid">
+            <div class="app-card" id="card-chrome">
+              <div class="app-icon">🌐</div>
+              <div class="app-info">
+                <h4>Google Chrome (Official)</h4>
+                <p>Opens GitHub login with persistent profiles & passkeys.</p>
+              </div>
+              <button class="cyber-btn sm neon-cyan" onclick="focusApp('chrome')">FOCUS / LAUNCH</button>
+            </div>
+
+            <div class="app-card" id="card-files">
+              <div class="app-icon">📁</div>
+              <div class="app-info">
+                <h4>File Manager (Thunar)</h4>
+                <p>Browse workspace files, ROM builds, and artifacts.</p>
+              </div>
+              <button class="cyber-btn sm neon-purple" onclick="focusApp('files')">OPEN FILES</button>
+            </div>
+
+            <div class="app-card" id="card-adb">
+              <div class="app-icon">⚡</div>
+              <div class="app-info">
+                <h4>ADB & Fastboot Tools</h4>
+                <p>Device flashing, payload extraction, and ROM flashing.</p>
+              </div>
+              <button class="cyber-btn sm neon-green" onclick="focusApp('adb')">LAUNCH SHELL</button>
+            </div>
+
+            <div class="app-card" id="card-taskmgr">
+              <div class="app-icon">📊</div>
+              <div class="app-info">
+                <h4>Task Manager</h4>
+                <p>Monitor container CPU, memory, and running tasks.</p>
+              </div>
+              <button class="cyber-btn sm" onclick="focusApp('taskmgr')">MONITOR</button>
+            </div>
+          </div>
+
+          <!-- Live Screen Inspector -->
+          <div class="inspector-section">
+            <div class="inspector-header">
+              <h4>📸 LIVE SCREEN SNAPSHOT (AI EYE)</h4>
+              <button id="btn-refresh-screen" class="cyber-btn sm neon-cyan">📸 SNAP CURRENT SCREEN</button>
+            </div>
+            <div class="snapshot-display" id="snapshot-display">
+              <img id="screen-img" src="assets/screen_placeholder.png" alt="Desktop Screen Preview" />
+              <div class="snapshot-time" id="snapshot-time">Snapshot: Ready</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- Settings Modal -->
+    <div id="settings-modal" class="modal-backdrop hidden">
+      <div class="cyber-modal">
+        <div class="modal-header">
+          <h3>⚙️ VIRGOX CLOUD CONNECTION SETTINGS</h3>
+          <button id="close-settings" class="cyber-btn sm">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="input-desktop-url">🖥️ Phone 2 Desktop URL (Port 3000):</label>
+            <input type="url" id="input-desktop-url" class="cyber-input" placeholder="https://....pinggy-free.link" />
+            <span class="hint">Enter your live Pinggy tunnel or Cloud Shell Web Preview URL</span>
+          </div>
+
+          <div class="form-group">
+            <label for="input-terminal-url">💻 Phone 1 Terminal URL (Port 7681):</label>
+            <input type="url" id="input-terminal-url" class="cyber-input" placeholder="https://....pinggy-free.link" />
+            <span class="hint">Interactive shell for Phone 1</span>
+          </div>
+
+          <div class="form-group">
+            <label for="input-bridge-url">🔗 Agent Bridge API URL (Port 8888 / Optional):</label>
+            <input type="url" id="input-bridge-url" class="cyber-input" placeholder="http://localhost:8888" />
+          </div>
+
+          <div class="quick-preset-actions">
+            <button id="btn-save-settings" class="cyber-btn neon-green">💾 SAVE & CONNECT</button>
+            <button id="btn-reset-defaults" class="cyber-btn">↺ RESET DEFAULTS</button>
+          </div>
+
+          <hr class="cyber-divider" />
+
+          <!-- Multi-Device Quick Links -->
+          <div class="multi-device-box">
+            <h4>📱 MULTI-DEVICE PAIRING LINKS</h4>
+            <div class="device-link-row">
+              <span>Phone 2 (Desktop):</span>
+              <a id="link-phone2" href="#" target="_blank" class="cyber-link">Open on Phone 2</a>
+            </div>
+            <div class="device-link-row">
+              <span>Phone 1 (Terminal):</span>
+              <a id="link-phone1" href="#" target="_blank" class="cyber-link">Open on Phone 1</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
