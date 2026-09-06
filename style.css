@@ -187,19 +187,29 @@ html, body {
 
 /* Toolbar */
 .viewer-toolbar {
-  height: 40px;
+  height: 42px;
   background: #0d111a;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 0 12px;
+  justify-content: flex-start;
+  gap: 10px;
+  padding: 0 10px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.viewer-toolbar::-webkit-scrollbar {
+  display: none;
 }
 
 .zoom-controls {
   display: flex;
   align-items: center;
   gap: 6px;
+  flex-shrink: 0;
 }
 
 .tool-label {
@@ -221,6 +231,12 @@ html, body {
   display: flex;
   align-items: center;
   gap: 6px;
+  flex-shrink: 0;
+}
+
+.mode-toggles .cyber-btn {
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 /* Screen Wrapper & IFrame */
@@ -290,27 +306,39 @@ html, body {
 
 /* Quick Mouse Bar (Floating Dock) */
 .quick-mouse-bar {
-  height: 46px;
+  height: 48px;
   background: #080a0f;
   border-top: 1px solid rgba(0, 229, 255, 0.2);
   display: flex;
   align-items: center;
-  justify-content: space-around;
-  padding: 0 6px;
+  justify-content: flex-start;
+  gap: 6px;
+  padding: 0 8px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.quick-mouse-bar::-webkit-scrollbar {
+  display: none;
 }
 
 .mouse-btn {
-  flex: 1;
-  height: 34px;
-  margin: 0 3px;
+  flex: 0 0 auto;
+  min-width: 64px;
+  height: 36px;
+  margin: 0;
+  padding: 0 10px;
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(0, 229, 255, 0.3);
   color: #fff;
   border-radius: 4px;
   font-family: var(--font-mono);
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   font-weight: 700;
   cursor: pointer;
+  white-space: nowrap;
   transition: all 0.15s ease;
 }
 
@@ -897,17 +925,62 @@ html, body {
   box-shadow: 0 0 12px var(--neon-amber);
 }
 
+/* Header Keyboard Button */
+#btn-header-keyboard {
+  font-weight: 700;
+  border-color: var(--neon-cyan);
+  color: var(--neon-cyan);
+  box-shadow: 0 0 10px rgba(0, 229, 255, 0.25);
+  white-space: nowrap;
+}
+
+#btn-header-keyboard.active {
+  background: var(--neon-cyan);
+  color: #000;
+  box-shadow: 0 0 14px var(--neon-cyan);
+}
+
+/* Floating Action Button (FAB) for Mobile/Touch Keyboard */
+.floating-kb-fab {
+  position: absolute;
+  bottom: 16px;
+  right: 16px;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: rgba(13, 18, 28, 0.95);
+  border: 2px solid var(--neon-cyan);
+  color: var(--neon-cyan);
+  font-size: 1.4rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 18px rgba(0, 229, 255, 0.5);
+  cursor: pointer;
+  z-index: 95;
+  transition: all 0.2s ease;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.floating-kb-fab:active, .floating-kb-fab.active {
+  background: var(--neon-cyan);
+  color: #000;
+  box-shadow: 0 0 22px var(--neon-cyan);
+  transform: scale(0.92);
+}
+
 /* Keyboard Drawer */
 .keyboard-drawer {
-  position: absolute;
-  bottom: 46px;
+  position: fixed;
+  bottom: 0;
   left: 0;
   right: 0;
   background: #0d121c;
   border-top: 2px solid var(--neon-cyan);
-  box-shadow: 0 -4px 20px rgba(0, 229, 255, 0.25);
-  z-index: 150;
-  padding: 10px 14px;
+  box-shadow: 0 -6px 25px rgba(0, 229, 255, 0.35);
+  z-index: 300;
+  padding: 12px 14px;
   display: flex;
   flex-direction: column;
   gap: 8px;

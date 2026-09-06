@@ -45,6 +45,7 @@
       </div>
 
       <div class="header-actions">
+        <button id="btn-header-keyboard" class="cyber-btn sm neon-cyan" title="Open Phone Keyboard Bridge">⌨️ TYPE</button>
         <button id="btn-fullscreen" class="cyber-btn sm" title="Toggle Fullscreen">⛶</button>
         <button id="btn-settings" class="cyber-btn sm neon-cyan" title="Configure URLs & Devices">⚙️</button>
       </div>
@@ -118,6 +119,8 @@
 
           <!-- Desktop Frame -->
           <iframe id="desktop-frame" src="about:blank" allow="autoplay; fullscreen; clipboard-read; clipboard-write" sandbox="allow-forms allow-modals allow-scripts allow-same-origin allow-popups"></iframe>
+          <!-- Floating Keyboard Button for Mobile/Touch -->
+          <button id="fab-btn-keyboard" class="floating-kb-fab" title="Open Phone Keyboard">⌨️</button>
         </div>
 
         <!-- Touchpad Floating Dock (for Desktop View) -->
@@ -129,29 +132,6 @@
           <button id="btn-scroll-up" class="mouse-btn">▲ SCROLL</button>
           <button id="btn-scroll-down" class="mouse-btn">▼ SCROLL</button>
           <button id="btn-right-click" class="mouse-btn">R-CLICK</button>
-        </div>
-
-        <!-- Mobile Virtual Keyboard Drawer -->
-        <div id="keyboard-drawer" class="keyboard-drawer hidden">
-          <div class="kb-header">
-            <span>⌨️ MOBILE KEYBOARD BRIDGE (SEND TO PC)</span>
-            <button id="close-keyboard" class="cyber-btn xs">&times;</button>
-          </div>
-          <div class="kb-input-row">
-            <input type="text" id="mobile-text-input" class="cyber-input kb-input" placeholder="Type here (opens your phone keyboard)..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
-            <button id="btn-send-text" class="cyber-btn sm neon-cyan">SEND</button>
-          </div>
-          <div class="kb-shortcuts-row">
-            <button class="kb-key-btn" data-key="Return">ENTER ↵</button>
-            <button class="kb-key-btn" data-key="BackSpace">⌫ BACK</button>
-            <button class="kb-key-btn" data-key="space">SPACE</button>
-            <button class="kb-key-btn" data-key="Tab">TAB ⇥</button>
-            <button class="kb-key-btn" data-key="Escape">ESC</button>
-            <button class="kb-key-btn" data-key="ctrl+a">SELECT ALL</button>
-            <button class="kb-key-btn" data-key="ctrl+c">COPY</button>
-            <button class="kb-key-btn" data-key="ctrl+v">PASTE</button>
-            <button class="kb-key-btn" data-key="ctrl+z">UNDO</button>
-          </div>
         </div>
       </section>
 
@@ -333,6 +313,29 @@
           </div>
         </div>
       </section>
+
+      <!-- Mobile Virtual Keyboard Drawer (Global across all tabs) -->
+      <div id="keyboard-drawer" class="keyboard-drawer hidden">
+        <div class="kb-header">
+          <span>⌨️ MOBILE KEYBOARD BRIDGE (SEND TO PC)</span>
+          <button id="close-keyboard" class="cyber-btn xs">&times;</button>
+        </div>
+        <div class="kb-input-row">
+          <input type="text" id="mobile-text-input" class="cyber-input kb-input" placeholder="Type here (opens your phone keyboard)..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+          <button id="btn-send-text" class="cyber-btn sm neon-cyan">SEND</button>
+        </div>
+        <div class="kb-shortcuts-row">
+          <button class="kb-key-btn" data-key="Return">ENTER ↵</button>
+          <button class="kb-key-btn" data-key="BackSpace">⌫ BACK</button>
+          <button class="kb-key-btn" data-key="space">SPACE</button>
+          <button class="kb-key-btn" data-key="Tab">TAB ⇥</button>
+          <button class="kb-key-btn" data-key="Escape">ESC</button>
+          <button class="kb-key-btn" data-key="ctrl+a">SELECT ALL</button>
+          <button class="kb-key-btn" data-key="ctrl+c">COPY</button>
+          <button class="kb-key-btn" data-key="ctrl+v">PASTE</button>
+          <button class="kb-key-btn" data-key="ctrl+z">UNDO</button>
+        </div>
+      </div>
 
     </main>
 

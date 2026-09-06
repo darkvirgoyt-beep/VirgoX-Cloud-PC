@@ -443,36 +443,39 @@
   function setupKeyboard() {
     const btnToggleKeyboard = document.getElementById('btn-toggle-keyboard');
     const dockBtnKeyboard = document.getElementById('dock-btn-keyboard');
+    const btnHeaderKeyboard = document.getElementById('btn-header-keyboard');
+    const fabBtnKeyboard = document.getElementById('fab-btn-keyboard');
     const closeKeyboard = document.getElementById('close-keyboard');
     const keyboardDrawer = document.getElementById('keyboard-drawer');
     const mobileTextInput = document.getElementById('mobile-text-input');
     const btnSendText = document.getElementById('btn-send-text');
 
+    const triggerButtons = [btnToggleKeyboard, dockBtnKeyboard, btnHeaderKeyboard, fabBtnKeyboard].filter(Boolean);
+
     function toggleKeyboard(show) {
       const isOpen = typeof show === 'boolean' ? show : keyboardDrawer.classList.contains('hidden');
       if (isOpen) {
         keyboardDrawer.classList.remove('hidden');
-        if (dockBtnKeyboard) dockBtnKeyboard.classList.add('active');
-        if (btnToggleKeyboard) btnToggleKeyboard.classList.add('active');
+        triggerButtons.forEach(btn => btn.classList.add('active'));
         state.keyboardOpen = true;
         setTimeout(() => {
           if (mobileTextInput) mobileTextInput.focus();
         }, 100);
       } else {
         keyboardDrawer.classList.add('hidden');
-        if (dockBtnKeyboard) dockBtnKeyboard.classList.remove('active');
-        if (btnToggleKeyboard) btnToggleKeyboard.classList.remove('active');
+        triggerButtons.forEach(btn => btn.classList.remove('active'));
         state.keyboardOpen = false;
         if (mobileTextInput) mobileTextInput.blur();
       }
     }
 
-    if (btnToggleKeyboard) {
-      btnToggleKeyboard.addEventListener('click', () => toggleKeyboard());
-    }
-    if (dockBtnKeyboard) {
-      dockBtnKeyboard.addEventListener('click', () => toggleKeyboard());
-    }
+    triggerButtons.forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        toggleKeyboard();
+      });
+    });
+
     if (closeKeyboard) {
       closeKeyboard.addEventListener('click', () => toggleKeyboard(false));
     }
