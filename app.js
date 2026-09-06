@@ -20,9 +20,12 @@
     config: { ...DEFAULT_CONFIG },
     activeTab: 'desktop',
     zoomLevel: 100,
+    isHandMode: false,
+    pan: { x: 0, y: 0 },
     isDragLocked: false,
     crosshair: { x: 50, y: 50 }, // percentage
-    touchStartDist: 0
+    touchStartDist: 0,
+    pinchStartDist: 0
   };
 
   // Load Saved Config from LocalStorage
@@ -54,6 +57,12 @@
   const splitDesktopFrame = document.getElementById('split-desktop-frame');
   const splitTerminalFrame = document.getElementById('split-terminal-frame');
   
+  // Hand / Pan Tool Elements
+  const btnHandMode = document.getElementById('btn-hand-mode');
+  const handStateText = document.getElementById('hand-state');
+  const panOverlay = document.getElementById('pan-overlay');
+  const dockBtnHand = document.getElementById('dock-btn-hand');
+
   // Crosshair Elements
   const toggleCrosshairBtn = document.getElementById('toggle-crosshair');
   const crosshairStateText = document.getElementById('crosshair-state');
@@ -98,6 +107,7 @@
     loadConfig();
     setupFrames();
     setupTabs();
+    setupHandMode();
     setupTouchpad();
     setupZoom();
     setupCrosshair();
@@ -290,25 +300,87 @@
     });
   }
 
+  // Hand Mode / Pan & Pinch Tool (Traveling across the screen)
+  function setupHandMode() {
+    function toggleHandMode(force) {
+      state.isHandMode = typeof force === 'boolean' ? force : !state.isHandMode;
+      if (state.isHandMode) {
+        handStateText.textContent = 'ON';
+        btnHandMode.classList.add('active');
+        dockBtnHand.classList.add('active');
+        dockBtnHand.textContent = '✋ PANNING (ON)';
+        panOverlay.classList.remove('hidden');
+      } else {
+        handStateText.textContent = 'OFF';
+        btnHandMode.classList.remove('active');
+        dockBtnHand.classList.remove('active');
+        dockBtnHand.textContent = '✋ TRAVEL (PAN)';
+        panOverlay.classList.add('hidden');
+      }
+    }
+
+    btnHandMode.addEventListener('click', () => toggleHandMode());
+    dockBtnHand.addEventListener('click', () => toggleHandMode());
+
+    let touchStartX = 0;
+    let touchStartY = 0;
+    let isPanning = false;
+
+    panOverlay.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      if (e.touches.length === 1) {
+        isPanning = true;
+        touchStartX = e.touches[0].clientX - state.pan.x;
+        touchStartY = e.touches[0].clientY - state.pan.y;
+      } else if (e.touches.length === 2) {
+        isPanning = false;
+        state.pinchStartDist = getTouchDistance(e.touches[0], e.touches[1]);
+      }
+    }, { passive: false });
+
+    panOverlay.addEventListener('touchmove', (e) => {
+      e.preventDefault();
+      if (e.touches.length === 1 && isPanning) {
+        state.pan.x = e.touches[0].clientX - touchStartX;
+        state.pan.y = e.touches[0].clientY - touchStartY;
+        updateFrameTransform();
+      } else if (e.touches.length === 2) {
+        const dist = getTouchDistance(e.touches[0], e.touches[1]);
+        const delta = dist - state.pinchStartDist;
+        if (Math.abs(delta) > 8) {
+          applyZoom(state.zoomLevel + (delta > 0 ? 5 : -5));
+          state.pinchStartDist = dist;
+        }
+      }
+    }, { passive: false });
+
+    panOverlay.addEventListener('touchend', (e) => {
+      if (e.touches.length === 0) {
+        isPanning = false;
+      }
+    });
+  }
+
+  function updateFrameTransform() {
+    const scale = state.zoomLevel / 100;
+    desktopFrame.style.transform = `translate(${state.pan.x}px, ${state.pan.y}px) scale(${scale})`;
+    desktopFrame.style.transformOrigin = 'center center';
+  }
+
   // Zoom Handling
   function setupZoom() {
     zoomInBtn.addEventListener('click', () => applyZoom(state.zoomLevel + 15));
     zoomOutBtn.addEventListener('click', () => applyZoom(state.zoomLevel - 15));
-    zoomResetBtn.addEventListener('click', () => applyZoom(100));
+    zoomResetBtn.addEventListener('click', () => {
+      state.pan = { x: 0, y: 0 };
+      applyZoom(100);
+    });
   }
 
   function applyZoom(val) {
-    state.zoomLevel = Math.max(50, Math.min(250, val));
+    state.zoomLevel = Math.max(50, Math.min(300, val));
     zoomLevelText.textContent = `${state.zoomLevel}%`;
-    desktopFrame.style.transform = `scale(${state.zoomLevel / 100})`;
-    desktopFrame.style.transformOrigin = 'top left';
-    if (state.zoomLevel > 100) {
-      desktopFrame.style.width = `${100 / (state.zoomLevel / 100)}%`;
-      desktopFrame.style.height = `${100 / (state.zoomLevel / 100)}%`;
-    } else {
-      desktopFrame.style.width = '100%';
-      desktopFrame.style.height = '100%';
-    }
+    updateFrameTransform();
   }
 
   // Terminal Quick Keys

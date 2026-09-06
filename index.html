@@ -85,6 +85,9 @@
           </div>
           
           <div class="mode-toggles">
+            <button id="btn-hand-mode" class="cyber-btn xs neon-amber" title="Toggle Hand Pan/Travel Mode">
+              ✋ Hand: <span id="hand-state">OFF</span>
+            </button>
             <button id="toggle-crosshair" class="cyber-btn xs neon-green">
               🎯 Crosshair: <span id="crosshair-state">OFF</span>
             </button>
@@ -94,6 +97,11 @@
         </div>
 
         <div class="screen-wrapper" id="desktop-wrapper">
+          <!-- Pan & Travel Hand Overlay -->
+          <div id="pan-overlay" class="pan-overlay hidden">
+            <div class="pan-badge">✋ HAND TRAVEL ACTIVE • SLIDE TO PAN • PINCH TO ZOOM</div>
+          </div>
+
           <!-- Crosshair Overlay -->
           <div id="crosshair-target" class="crosshair-overlay hidden">
             <div class="crosshair-h"></div>
@@ -107,6 +115,7 @@
 
         <!-- Touchpad Floating Dock (for Desktop View) -->
         <div class="quick-mouse-bar">
+          <button id="dock-btn-hand" class="mouse-btn hand-btn">✋ TRAVEL (PAN)</button>
           <button id="btn-left-click" class="mouse-btn">L-CLICK</button>
           <button id="btn-drag-lock" class="mouse-btn drag-btn">DRAG LOCK</button>
           <button id="btn-scroll-up" class="mouse-btn">▲ SCROLL</button>

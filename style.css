@@ -836,6 +836,67 @@ html, body {
   50% { transform: scale(1.1); opacity: 0.85; }
 }
 
+/* Hand / Pan Overlay */
+.pan-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 90;
+  cursor: grab;
+  touch-action: none;
+  background: rgba(255, 170, 0, 0.04);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 14px;
+}
+
+.pan-overlay:active {
+  cursor: grabbing;
+}
+
+.pan-overlay.hidden {
+  display: none;
+}
+
+.pan-badge {
+  background: rgba(10, 14, 23, 0.9);
+  border: 1px solid var(--neon-amber);
+  color: var(--neon-amber);
+  padding: 5px 14px;
+  border-radius: 20px;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  box-shadow: 0 0 16px rgba(255, 170, 0, 0.35);
+  pointer-events: none;
+  animation: pulse 2s infinite;
+}
+
+.mouse-btn.hand-btn {
+  border-color: rgba(255, 170, 0, 0.4);
+  color: var(--neon-amber);
+}
+
+.mouse-btn.hand-btn.active {
+  background: var(--neon-amber);
+  color: #000;
+  border-color: var(--neon-amber);
+  box-shadow: 0 0 12px var(--neon-amber);
+  font-weight: 800;
+}
+
+.cyber-btn.neon-amber {
+  border-color: var(--neon-amber);
+  color: var(--neon-amber);
+}
+
+.cyber-btn.neon-amber.active {
+  background: var(--neon-amber);
+  color: #000;
+  box-shadow: 0 0 12px var(--neon-amber);
+}
+
 /* Mobile Responsiveness */
 @media (max-width: 600px) {
   .status-indicators {
@@ -848,3 +909,4 @@ html, body {
     grid-template-columns: 1fr;
   }
 }
+
