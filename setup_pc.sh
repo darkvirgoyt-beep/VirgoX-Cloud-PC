@@ -22,6 +22,7 @@ if ! docker ps -a --format '{{.Names}}' | grep -q "^virgox-desktop$"; then
       -e PGID=1000 \
       -e TZ=Etc/UTC \
       -e TITLE="VirgoX Cyber Linux Desktop" \
+      -e MAX_RES=1920x1080 \
       -p 3000:3000 \
       -p 3001:3001 \
       -v "$HOME":/config/Desktop/VirgoX-Files \

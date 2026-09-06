@@ -1,23 +1,19 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# VirgoX Multi-Device Tunnel Generator
+# VirgoX Multi-Device Cloudflare Tunnel Generator
 # ==============================================================================
 set -e
 
-echo "[*] Generating public HTTPS links for Desktop & Terminal..."
+echo "[*] Launching high-speed Cloudflare Tunnels (Desktop 3000 & Terminal 7681)..."
 
-# Desktop Tunnel (port 3000)
-pkill -f "a.pinggy.io.*3000" || true
-nohup ssh -p 443 -R0:localhost:3000 -o StrictHostKeyChecking=no -o ServerAliveInterval=30 a.pinggy.io > /home/darkvirgoyt/pinggy_desktop.log 2>&1 &
+pkill -f "cloudflared tunnel" || true
+setsid cloudflared tunnel --url http://localhost:3000 </dev/null >/tmp/cf_desktop.log 2>&1 &
+setsid cloudflared tunnel --url http://localhost:7681 </dev/null >/tmp/cf_terminal.log 2>&1 &
 
-# Terminal Tunnel (port 7681)
-pkill -f "a.pinggy.io.*7681" || true
-nohup ssh -p 443 -R0:localhost:7681 -o StrictHostKeyChecking=no -o ServerAliveInterval=30 a.pinggy.io > /home/darkvirgoyt/pinggy_terminal.log 2>&1 &
+sleep 8
 
-sleep 4
-
-DESKTOP_URL=$(cat /home/darkvirgoyt/pinggy_desktop.log | grep -E "https://.*\.link" | tail -n 1)
-TERMINAL_URL=$(cat /home/darkvirgoyt/pinggy_terminal.log | grep -E "https://.*\.link" | tail -n 1)
+DESKTOP_URL=$(grep -o 'https://[-a-zA-Z0-9@:%._\+~#=]\+\.trycloudflare\.com' /tmp/cf_desktop.log | head -n 1)
+TERMINAL_URL=$(grep -o 'https://[-a-zA-Z0-9@:%._\+~#=]\+\.trycloudflare\.com' /tmp/cf_terminal.log | head -n 1)
 
 echo "------------------------------------------------------------------------------"
 echo "  🖥️  Phone 2 (DESKTOP GUI):  $DESKTOP_URL"

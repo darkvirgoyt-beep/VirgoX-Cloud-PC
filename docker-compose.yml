@@ -10,6 +10,7 @@ services:
       - PGID=1000
       - TZ=Etc/UTC
       - TITLE=VirgoX Cloud PC
+      - MAX_RES=1920x1080
     volumes:
       - /home/darkvirgoyt:/config/Desktop/VirgoX-Files
     ports:
