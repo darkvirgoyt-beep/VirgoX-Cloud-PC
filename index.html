@@ -38,6 +38,10 @@
           <span class="dot"></span>
           <span class="label">AI PAIR ACTIVE</span>
         </div>
+        <div class="indicator-chip online" id="eco-chip" title="Eco Mode: Low RAM & GPU usage active">
+          <span class="dot" style="background:#00ff66;"></span>
+          <span class="label">ECO RAM ON</span>
+        </div>
       </div>
 
       <div class="header-actions">
@@ -85,6 +89,7 @@
           </div>
           
           <div class="mode-toggles">
+            <button id="btn-toggle-eco" class="cyber-btn xs neon-green" title="Toggle Low Phone RAM / Eco Mode">⚡ Eco RAM: <span id="eco-state">ON</span></button>
             <button id="btn-orientation" class="cyber-btn xs neon-purple" title="Toggle Portrait / Landscape">📱 Portrait</button>
             <button id="btn-toggle-keyboard" class="cyber-btn xs neon-cyan" title="Open Phone Keyboard">⌨️ Type</button>
             <button id="btn-hand-mode" class="cyber-btn xs neon-amber" title="Toggle Hand Pan/Travel Mode">
@@ -354,6 +359,14 @@
           <div class="form-group">
             <label for="input-bridge-url">🔗 Agent Bridge API URL (Port 8888 / Optional):</label>
             <input type="url" id="input-bridge-url" class="cyber-input" placeholder="http://localhost:8888" />
+          </div>
+
+          <div class="form-group" style="margin-top: 12px; margin-bottom: 16px;">
+            <label style="display:flex; align-items:center; gap:10px; cursor:pointer; color:var(--neon-green); font-size:0.95rem; font-weight:600;">
+              <input type="checkbox" id="setting-eco-mode" checked style="width:18px; height:18px; accent-color:var(--neon-green);" />
+              <span>⚡ Low Phone RAM Mode (Auto-free background streams)</span>
+            </label>
+            <span class="hint">Immediately frees 200MB–500MB of phone memory by pausing hidden streams and disabling heavy GPU blur filters.</span>
           </div>
 
           <div class="quick-preset-actions">

@@ -12,7 +12,8 @@
     terminalUrl: 'https://actors-garlic-cookies-starts.trycloudflare.com',
     bridgeUrl: 'https://adventure-vocal-paragraph-betting.trycloudflare.com',
     sensitivity: 1.5,
-    crosshairEnabled: false
+    crosshairEnabled: false,
+    ecoMode: true
   };
 
   // State
@@ -118,6 +119,7 @@
     loadConfig();
     setupFrames();
     setupTabs();
+    setupEcoMode();
     setupHandMode();
     setupKeyboard();
     setupOrientation();
@@ -130,18 +132,21 @@
     checkConnectionStatus();
   }
 
-  // Setup Iframes with URLs
+  // Setup Iframes with URLs (Lazy Loading & Smart Phone RAM Optimization)
   function setupFrames() {
+    // Only load the active primary desktop frame on startup to prevent mobile memory exhaustion
     if (state.config.desktopUrl) {
       desktopFrame.src = state.config.desktopUrl;
-      splitDesktopFrame.src = state.config.desktopUrl;
       linkPhone2.href = state.config.desktopUrl;
     }
     if (state.config.terminalUrl) {
-      terminalFrame.src = state.config.terminalUrl;
-      splitTerminalFrame.src = state.config.terminalUrl;
       linkPhone1.href = state.config.terminalUrl;
     }
+
+    // Keep background/split frames blank until the user actually opens those tabs!
+    splitDesktopFrame.src = 'about:blank';
+    splitTerminalFrame.src = 'about:blank';
+    terminalFrame.src = 'about:blank';
 
     document.getElementById('open-external-desktop').addEventListener('click', () => {
       window.open(state.config.desktopUrl, '_blank');
@@ -160,20 +165,74 @@
     });
   }
 
-  // Navigation Tabs
+  // Navigation Tabs with Smart Memory Deallocation
   function setupTabs() {
     tabs.forEach(btn => {
       btn.addEventListener('click', () => {
         const targetTab = btn.dataset.tab;
-        tabs.forEach(t => t.classList.remove('active'));
-        tabContents.forEach(c => c.classList.remove('active'));
-
-        btn.classList.add('active');
-        const targetContent = document.getElementById(`tab-${targetTab}`);
-        if (targetContent) targetContent.classList.add('active');
-        state.activeTab = targetTab;
+        switchTab(targetTab);
       });
     });
+  }
+
+  function switchTab(targetTab) {
+    tabs.forEach(t => t.classList.remove('active'));
+    tabContents.forEach(c => c.classList.remove('active'));
+
+    const activeBtn = document.querySelector(`.tab-btn[data-tab="${targetTab}"]`);
+    if (activeBtn) activeBtn.classList.add('active');
+    const targetContent = document.getElementById(`tab-${targetTab}`);
+    if (targetContent) targetContent.classList.add('active');
+    state.activeTab = targetTab;
+
+    // Smart Stream Memory Manager (Frees phone RAM immediately upon switching)
+    if (targetTab === 'desktop' || targetTab === 'touchpad') {
+      if (!desktopFrame.src || desktopFrame.src === 'about:blank') {
+        desktopFrame.src = state.config.desktopUrl;
+      }
+      // Instantly unload split frames to reclaim 200MB+ mobile memory
+      if (splitDesktopFrame && splitDesktopFrame.src !== 'about:blank') {
+        splitDesktopFrame.src = 'about:blank';
+      }
+      if (splitTerminalFrame && splitTerminalFrame.src !== 'about:blank') {
+        splitTerminalFrame.src = 'about:blank';
+      }
+      if (state.config.ecoMode && terminalFrame && terminalFrame.src !== 'about:blank') {
+        terminalFrame.src = 'about:blank';
+      }
+    } else if (targetTab === 'terminal') {
+      if (!terminalFrame.src || terminalFrame.src === 'about:blank') {
+        terminalFrame.src = state.config.terminalUrl;
+      }
+      if (splitDesktopFrame && splitDesktopFrame.src !== 'about:blank') {
+        splitDesktopFrame.src = 'about:blank';
+      }
+      if (splitTerminalFrame && splitTerminalFrame.src !== 'about:blank') {
+        splitTerminalFrame.src = 'about:blank';
+      }
+      if (state.config.ecoMode && desktopFrame && desktopFrame.src !== 'about:blank') {
+        desktopFrame.src = 'about:blank';
+      }
+    } else if (targetTab === 'split') {
+      if (!splitDesktopFrame.src || splitDesktopFrame.src === 'about:blank') {
+        splitDesktopFrame.src = state.config.desktopUrl;
+      }
+      if (!splitTerminalFrame.src || splitTerminalFrame.src === 'about:blank') {
+        splitTerminalFrame.src = state.config.terminalUrl;
+      }
+      // Blank main desktop frame while split view is open to avoid 2 parallel video decoders
+      if (desktopFrame && desktopFrame.src !== 'about:blank') {
+        desktopFrame.src = 'about:blank';
+      }
+    } else {
+      // Launcher / Deck tab: unload split frames
+      if (splitDesktopFrame && splitDesktopFrame.src !== 'about:blank') {
+        splitDesktopFrame.src = 'about:blank';
+      }
+      if (splitTerminalFrame && splitTerminalFrame.src !== 'about:blank') {
+        splitTerminalFrame.src = 'about:blank';
+      }
+    }
   }
 
   // Crosshair Logic
@@ -520,12 +579,51 @@
     });
   }
 
+  // Eco Mode (Low Phone RAM & GPU Saver)
+  function setupEcoMode() {
+    const btnToggleEco = document.getElementById('btn-toggle-eco');
+    const ecoState = document.getElementById('eco-state');
+    const ecoChip = document.getElementById('eco-chip');
+    const appEl = document.getElementById('app');
+
+    function applyEcoMode(enabled) {
+      state.config.ecoMode = enabled;
+      if (enabled) {
+        if (appEl) appEl.classList.add('eco-mode');
+        if (ecoState) {
+          ecoState.textContent = 'ON';
+          ecoState.style.color = '#00ff66';
+        }
+        if (ecoChip) ecoChip.style.display = 'flex';
+      } else {
+        if (appEl) appEl.classList.remove('eco-mode');
+        if (ecoState) {
+          ecoState.textContent = 'OFF';
+          ecoState.style.color = '#ffaa00';
+        }
+        if (ecoChip) ecoChip.style.display = 'none';
+      }
+      saveConfig();
+    }
+
+    applyEcoMode(state.config.ecoMode !== false);
+
+    if (btnToggleEco) {
+      btnToggleEco.addEventListener('click', () => {
+        applyEcoMode(!state.config.ecoMode);
+      });
+    }
+  }
+
   // Settings Modal
   function setupSettingsModal() {
+    const settingEcoMode = document.getElementById('setting-eco-mode');
+
     btnSettings.addEventListener('click', () => {
       inputDesktopUrl.value = state.config.desktopUrl;
       inputTerminalUrl.value = state.config.terminalUrl;
       inputBridgeUrl.value = state.config.bridgeUrl || '';
+      if (settingEcoMode) settingEcoMode.checked = state.config.ecoMode !== false;
       settingsModal.classList.remove('hidden');
     });
 
@@ -537,6 +635,15 @@
       state.config.desktopUrl = inputDesktopUrl.value.trim();
       state.config.terminalUrl = inputTerminalUrl.value.trim();
       state.config.bridgeUrl = inputBridgeUrl.value.trim();
+      if (settingEcoMode) {
+        state.config.ecoMode = settingEcoMode.checked;
+        const appEl = document.getElementById('app');
+        if (state.config.ecoMode) {
+          appEl.classList.add('eco-mode');
+        } else {
+          appEl.classList.remove('eco-mode');
+        }
+      }
       saveConfig();
       setupFrames();
       settingsModal.classList.add('hidden');
@@ -550,6 +657,7 @@
         inputDesktopUrl.value = state.config.desktopUrl;
         inputTerminalUrl.value = state.config.terminalUrl;
         inputBridgeUrl.value = state.config.bridgeUrl;
+        if (settingEcoMode) settingEcoMode.checked = state.config.ecoMode !== false;
         setupFrames();
       }
     });

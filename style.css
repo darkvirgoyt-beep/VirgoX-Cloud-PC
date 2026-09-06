@@ -1036,3 +1036,35 @@ html, body {
   to { transform: translateY(0); opacity: 1; }
 }
 
+/* ==========================================================================
+   ⚡ Eco Mode / Ultra Low Phone RAM Optimization
+   ========================================================================== */
+.screen-wrapper iframe,
+.split-pane iframe {
+  transform: translateZ(0);
+  will-change: transform;
+  backface-visibility: hidden;
+}
+
+.eco-mode {
+  --border-glow: #0088aa;
+}
+
+.eco-mode * {
+  text-shadow: none !important;
+  box-shadow: none !important;
+  animation: none !important;
+}
+
+.eco-mode .cyber-header {
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.7);
+}
+
+.eco-mode .quick-mouse-bar,
+.eco-mode .viewer-toolbar,
+.eco-mode .keyboard-drawer {
+  backdrop-filter: none !important;
+  background: #0a0c12 !important;
+}
+
+
