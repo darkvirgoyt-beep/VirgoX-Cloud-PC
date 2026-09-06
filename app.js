@@ -8,8 +8,8 @@
 
   // Default Configuration
   const DEFAULT_CONFIG = {
-    desktopUrl: 'https://xwniw-136-85-52-180.run.pinggy-free.link',
-    terminalUrl: 'https://veppz-136-85-52-180.run.pinggy-free.link',
+    desktopUrl: 'https://former-warranties-chance-consortium.trycloudflare.com',
+    terminalUrl: 'https://actors-garlic-cookies-starts.trycloudflare.com',
     bridgeUrl: 'http://localhost:8888',
     sensitivity: 1.5,
     crosshairEnabled: false
