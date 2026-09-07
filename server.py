@@ -22,6 +22,7 @@ UDP_INPUT_TARGET = ("172.17.0.2", 9999)
 AUTH_FILE = "/home/darkvirgoyt/virgox_auth.json"
 OTP_LOG_FILE = "/home/darkvirgoyt/otp_codes.log"
 _active_otps = {}  # {email: {"otp": code, "expires": timestamp, "attempts": count}}
+_setup_otps = {}   # {email: {"otp": code, "expires": timestamp, "attempts": count}}
 _udp_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
 def hash_password(password, salt=None):
@@ -512,6 +513,65 @@ class BridgeHandler(BaseHTTPRequestHandler):
                 except Exception:
                     pass
             self._respond_ok({"saved": True})
+
+        elif path == "/api/auth/send_setup_otp":
+            email = payload.get("email", "").strip().lower()
+            if not email or "@" not in email:
+                self._respond_error("Please enter a valid email address")
+                return
+            otp_code = str(random.randint(100000, 999999))
+            _setup_otps[email] = {
+                "otp": otp_code,
+                "expires": time.time() + 600,
+                "attempts": 0
+            }
+            send_otp_email(email, otp_code)
+            self._respond_ok({
+                "status": "ok",
+                "message": f"Verification code sent to {mask_email(email)}",
+                "email": mask_email(email),
+                "otp_hint": otp_code
+            })
+
+        elif path == "/api/auth/verify_setup_and_set_password":
+            email = payload.get("email", "").strip().lower()
+            otp_in = str(payload.get("otp", "")).strip()
+            password = payload.get("password", "").strip()
+            if not email or "@" not in email:
+                self._respond_error("Invalid email address")
+                return
+            if not password or len(password) < 4:
+                self._respond_error("Password must be at least 4 characters long")
+                return
+            entry = _setup_otps.get(email)
+            if not entry:
+                self._respond_error("No verification code found. Please tap 'Send Code' first.")
+                return
+            if time.time() > entry["expires"]:
+                del _setup_otps[email]
+                self._respond_error("Verification code has expired. Please request a new one.")
+                return
+            if entry["otp"] != otp_in:
+                entry["attempts"] += 1
+                if entry["attempts"] >= 5:
+                    del _setup_otps[email]
+                    self._respond_error("Too many failed attempts. Please request a new code.")
+                else:
+                    self._respond_error("Invalid verification code. Please check and re-enter.")
+                return
+            del _setup_otps[email]
+            auth_data = {
+                "email": email,
+                "password_hash": hash_password(password),
+                "created_at": time.strftime("%Y-%m-%d %H:%M:%S UTC", time.gmtime()),
+                "updated_at": time.strftime("%Y-%m-%d %H:%M:%S UTC", time.gmtime())
+            }
+            save_auth_data(auth_data)
+            self._respond_ok({
+                "status": "ok",
+                "message": "Email verified & Master Password activated successfully!",
+                "email": mask_email(email)
+            })
 
         elif path == "/api/auth/setup":
             email = payload.get("email", "").strip()

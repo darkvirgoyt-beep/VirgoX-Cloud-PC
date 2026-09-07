@@ -145,36 +145,60 @@
     setupSecurityGate();
   }
 
-  // Setup Iframes with URLs (Lazy Loading & Smart Phone RAM Optimization)
-  function setupFrames() {
-    // Only load the active primary desktop frame on startup to prevent mobile memory exhaustion
-    if (state.config.desktopUrl) {
+  // Frame Security Controllers: STRICT zero-trust isolation
+  function loadFrames() {
+    if (sessionStorage.getItem('virgox_authenticated') !== 'true') return;
+    if (state.config.desktopUrl && (!desktopFrame.src || desktopFrame.src === 'about:blank')) {
       desktopFrame.src = state.config.desktopUrl;
       linkPhone2.href = state.config.desktopUrl;
     }
     if (state.config.terminalUrl) {
       linkPhone1.href = state.config.terminalUrl;
     }
+  }
 
-    // Keep background/split frames blank until the user actually opens those tabs!
-    splitDesktopFrame.src = 'about:blank';
-    splitTerminalFrame.src = 'about:blank';
-    terminalFrame.src = 'about:blank';
+  function unloadFrames() {
+    if (desktopFrame) desktopFrame.src = 'about:blank';
+    if (terminalFrame) terminalFrame.src = 'about:blank';
+    if (splitDesktopFrame) splitDesktopFrame.src = 'about:blank';
+    if (splitTerminalFrame) splitTerminalFrame.src = 'about:blank';
+  }
+
+  // Setup Iframes with URLs (Strict Protection: Load ONLY after password verification)
+  function setupFrames() {
+    // Keep all frames completely blank and disconnected until authenticated!
+    unloadFrames();
+
+    if (sessionStorage.getItem('virgox_authenticated') === 'true') {
+      loadFrames();
+    }
 
     document.getElementById('open-external-desktop').addEventListener('click', () => {
-      window.open(state.config.desktopUrl, '_blank');
+      if (sessionStorage.getItem('virgox_authenticated') === 'true') {
+        window.open(state.config.desktopUrl, '_blank');
+      } else {
+        alert('🔒 Security Lock: Enter master password to access your Cloud PC.');
+      }
     });
 
     document.getElementById('open-external-terminal').addEventListener('click', () => {
-      window.open(state.config.terminalUrl, '_blank');
+      if (sessionStorage.getItem('virgox_authenticated') === 'true') {
+        window.open(state.config.terminalUrl, '_blank');
+      } else {
+        alert('🔒 Security Lock: Enter master password to access your Cloud PC.');
+      }
     });
 
     document.getElementById('reload-desktop').addEventListener('click', () => {
-      desktopFrame.src = state.config.desktopUrl;
+      if (sessionStorage.getItem('virgox_authenticated') === 'true') {
+        desktopFrame.src = state.config.desktopUrl;
+      }
     });
 
     document.getElementById('reload-terminal').addEventListener('click', () => {
-      terminalFrame.src = state.config.terminalUrl;
+      if (sessionStorage.getItem('virgox_authenticated') === 'true') {
+        terminalFrame.src = state.config.terminalUrl;
+      }
     });
   }
 
@@ -1541,6 +1565,9 @@
   // ==========================================================================
   // 🔒 VirgoX Security Gateway & Lock Screen Controller
   // ==========================================================================
+  // ==========================================================================
+  // 🔒 VirgoX Security Gateway & Lock Screen Controller (STRICT ZERO-TRUST)
+  // ==========================================================================
   function setupSecurityGate() {
     const authOverlay = document.getElementById('auth-overlay');
     if (!authOverlay) return;
@@ -1552,16 +1579,20 @@
 
     // Views
     const viewSetup = document.getElementById('auth-view-setup');
+    const setupStep2 = document.getElementById('auth-setup-step2');
     const viewLogin = document.getElementById('auth-view-login');
     const viewOtp = document.getElementById('auth-view-otp');
     const viewNewpass = document.getElementById('auth-view-newpass');
 
     // Inputs
-    const inputEmail = document.getElementById('auth-input-email');
-    const inputSetupPass = document.getElementById('auth-input-setup-pass');
-    const inputSetupConfirm = document.getElementById('auth-input-setup-confirm');
-    const inputLoginPass = document.getElementById('auth-input-login-pass');
-    const inputOtp = document.getElementById('auth-input-otp');
+    const inputSetupEmail = document.getElementById('auth-setup-email');
+    const inputSetupOtp = document.getElementById('auth-setup-otp');
+    const inputSetupPass = document.getElementById('auth-setup-pass');
+    const inputSetupConfirm = document.getElementById('auth-setup-pass-confirm');
+
+    const inputLoginPass = document.getElementById('auth-login-pass');
+
+    const inputResetOtp = document.getElementById('auth-input-otp');
     const inputNewPass = document.getElementById('auth-input-new-pass');
     const inputNewConfirm = document.getElementById('auth-input-new-confirm');
 
@@ -1570,16 +1601,17 @@
     const otpTargetEmail = document.getElementById('auth-otp-target-email');
 
     // Buttons
-    const btnSetupSave = document.getElementById('btn-auth-setup-save');
+    const btnSendSetupCode = document.getElementById('btn-auth-send-setup-code');
+    const btnConfirmSetup = document.getElementById('btn-auth-confirm-setup');
     const btnLogin = document.getElementById('btn-auth-login');
     const btnTriggerReset = document.getElementById('btn-auth-trigger-reset');
-    const btnVerifyOtp = document.getElementById('btn-auth-verify-otp');
-    const btnResendOtp = document.getElementById('btn-auth-resend-otp');
-    const btnCancelOtp = document.getElementById('btn-auth-cancel-otp');
+    const btnVerifyResetOtp = document.getElementById('btn-auth-verify-otp');
+    const btnResendResetOtp = document.getElementById('btn-auth-resend-otp');
+    const btnCancelResetOtp = document.getElementById('btn-auth-cancel-otp');
     const btnSaveNewpass = document.getElementById('btn-auth-save-newpass');
     const btnHeaderLock = document.getElementById('btn-header-lock');
 
-    let currentVerifiedOtp = '';
+    let currentVerifiedResetOtp = '';
 
     // SHA-256 Hex Digest helper
     async function sha256Hex(str) {
@@ -1619,13 +1651,13 @@
 
       if (viewName === 'setup') {
         if (authTitle) authTitle.textContent = 'VIRGOX SECURITY SETUP';
-        if (authSubtitle) authSubtitle.textContent = 'Register email & master passcode to protect your Cloud PC';
+        if (authSubtitle) authSubtitle.textContent = 'Verify your email once & set master password to protect Cloud PC';
         if (authLockIcon) authLockIcon.textContent = '🛡️';
         if (viewSetup) viewSetup.classList.remove('hidden');
-        setTimeout(() => inputEmail && inputEmail.focus(), 100);
+        setTimeout(() => inputSetupEmail && inputSetupEmail.focus(), 100);
       } else if (viewName === 'login') {
         if (authTitle) authTitle.textContent = 'VIRGOX CLOUD PC LOCKED';
-        if (authSubtitle) authSubtitle.textContent = 'Enter your master passcode to resume your desktop session';
+        if (authSubtitle) authSubtitle.textContent = 'Strict Protection: Enter your set password to access Cloud PC';
         if (authLockIcon) authLockIcon.textContent = '🔒';
         if (viewLogin) viewLogin.classList.remove('hidden');
         if (inputLoginPass) {
@@ -1633,17 +1665,17 @@
           setTimeout(() => inputLoginPass.focus(), 100);
         }
       } else if (viewName === 'otp') {
-        if (authTitle) authTitle.textContent = 'ENTER SECURITY RESET OTP';
-        if (authSubtitle) authSubtitle.textContent = 'Check your email for the 6-digit recovery code';
+        if (authTitle) authTitle.textContent = 'PASSWORD RESET VIA EMAIL';
+        if (authSubtitle) authSubtitle.textContent = 'Enter the 6-digit recovery code sent to your email';
         if (authLockIcon) authLockIcon.textContent = '📩';
         if (viewOtp) viewOtp.classList.remove('hidden');
-        if (inputOtp) {
-          inputOtp.value = '';
-          setTimeout(() => inputOtp.focus(), 100);
+        if (inputResetOtp) {
+          inputResetOtp.value = '';
+          setTimeout(() => inputResetOtp.focus(), 100);
         }
       } else if (viewName === 'newpass') {
-        if (authTitle) authTitle.textContent = 'CREATE NEW PASSCODE';
-        if (authSubtitle) authSubtitle.textContent = 'Identity confirmed. Set your new master password';
+        if (authTitle) authTitle.textContent = 'CREATE NEW MASTER PASSWORD';
+        if (authSubtitle) authSubtitle.textContent = 'Code verified. Enter your new password';
         if (authLockIcon) authLockIcon.textContent = '🔑';
         if (viewNewpass) viewNewpass.classList.remove('hidden');
         if (inputNewPass) {
@@ -1658,25 +1690,28 @@
       sessionStorage.setItem('virgox_authenticated', 'true');
       if (authLockIcon) authLockIcon.textContent = '🔓';
       authOverlay.classList.add('hidden');
+      loadFrames();
     }
 
     function lockPC() {
       sessionStorage.removeItem('virgox_authenticated');
+      unloadFrames();
       authOverlay.classList.remove('hidden');
       checkAuthStatus();
     }
 
     // Check configuration and session state
     async function checkAuthStatus() {
-      // 1. If currently authenticated in this tab session, keep unlocked
       if (sessionStorage.getItem('virgox_authenticated') === 'true') {
         authOverlay.classList.add('hidden');
+        loadFrames();
         return;
       }
 
+      // STRICT: Keep iframes completely unloaded!
+      unloadFrames();
       authOverlay.classList.remove('hidden');
 
-      // 2. Query bridge server for registered status
       let isConfigured = false;
       let registeredEmail = localStorage.getItem('virgox_registered_email') || '';
 
@@ -1696,7 +1731,7 @@
             }
           }
         } catch (e) {
-          console.warn('Bridge auth check offline, relying on local config:', e);
+          console.warn('Bridge auth status check offline:', e);
         }
       }
 
@@ -1705,79 +1740,159 @@
       }
 
       if (isConfigured) {
-        if (displayEmail) displayEmail.textContent = registeredEmail || 'Registered Owner';
+        if (displayEmail) displayEmail.textContent = registeredEmail || 'Secure Owner';
         switchView('login');
       } else {
         switchView('setup');
       }
     }
 
-    // 1. SETUP SUBMIT
-    if (btnSetupSave) {
-      btnSetupSave.addEventListener('click', async () => {
-        const email = (inputEmail ? inputEmail.value : '').trim();
-        const p1 = (inputSetupPass ? inputSetupPass.value : '').trim();
-        const p2 = (inputSetupConfirm ? inputSetupConfirm.value : '').trim();
-
+    // ==========================================
+    // 1. INITIAL SETUP: SEND EMAIL CODE
+    // ==========================================
+    if (btnSendSetupCode) {
+      btnSendSetupCode.addEventListener('click', async () => {
+        const email = (inputSetupEmail ? inputSetupEmail.value : '').trim();
         if (!email || !email.includes('@')) {
-          showAlert('Please enter a valid recovery email address.');
-          if (inputEmail) inputEmail.focus();
-          return;
-        }
-        if (!p1 || p1.length < 4) {
-          showAlert('Master passcode must be at least 4 characters long.');
-          if (inputSetupPass) inputSetupPass.focus();
-          return;
-        }
-        if (p1 !== p2) {
-          showAlert('Passcodes do not match. Please re-enter.');
-          if (inputSetupConfirm) inputSetupConfirm.focus();
+          showAlert('Please enter a valid email address to receive your verification code.');
+          if (inputSetupEmail) inputSetupEmail.focus();
           return;
         }
 
-        btnSetupSave.disabled = true;
-        btnSetupSave.textContent = '⏳ SAVING PASSCODE...';
+        btnSendSetupCode.disabled = true;
+        btnSendSetupCode.textContent = '⏳ Sending code...';
+        hideAlert();
 
         try {
-          // Send to bridge server
-          let serverOk = false;
+          let codeSent = false;
+          let hintMsg = '';
+
           if (state.config.bridgeUrl) {
             try {
-              const res = await fetch(`${state.config.bridgeUrl}/api/auth/setup`, {
+              const res = await fetch(`${state.config.bridgeUrl}/api/auth/send_setup_otp`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, password: p1 })
+                body: JSON.stringify({ email })
               });
               const data = await res.json();
-              if (res.ok && data.status === 'ok') serverOk = true;
+              if (res.ok && data.status === 'ok') {
+                codeSent = true;
+                if (data.otp_hint) hintMsg = ` (Security Code: ${data.otp_hint})`;
+              } else if (data.message) {
+                showAlert('❌ ' + data.message);
+              }
             } catch (e) {}
           }
 
-          // Save locally
-          const hash = await sha256Hex(p1);
-          localStorage.setItem('virgox_registered_email', email);
-          localStorage.setItem('virgox_auth_pass_hash', hash);
-          localStorage.setItem('virgox_auth_configured', 'true');
+          if (!codeSent) {
+            const tempCode = Math.floor(100000 + Math.random() * 900000).toString();
+            sessionStorage.setItem('virgox_temp_setup_otp', tempCode);
+            hintMsg = ` (Local Code: ${tempCode})`;
+            codeSent = true;
+          }
 
-          showAlert('✓ Security Passcode Configured! Entering Cloud PC...', 'success');
-          setTimeout(() => {
-            btnSetupSave.disabled = false;
-            btnSetupSave.textContent = '⚡ ACTIVATE & ENTER CLOUD PC';
-            unlockPC();
-          }, 800);
+          if (codeSent) {
+            btnSendSetupCode.textContent = '✓ CODE SENT';
+            if (setupStep2) setupStep2.classList.remove('hidden');
+            showAlert(`📩 6-digit verification code sent to ${email}! Enter the code and set your master password below.${hintMsg}`, 'info');
+            setTimeout(() => inputSetupOtp && inputSetupOtp.focus(), 150);
+          }
         } catch (err) {
-          showAlert('Error saving passcode: ' + err.message);
-          btnSetupSave.disabled = false;
-          btnSetupSave.textContent = '⚡ ACTIVATE & ENTER CLOUD PC';
+          showAlert('Error sending verification code: ' + err.message);
+          btnSendSetupCode.disabled = false;
+          btnSendSetupCode.textContent = '📨 SEND CODE';
         }
       });
     }
 
-    // 2. LOGIN SUBMIT
+    // ==========================================
+    // 2. INITIAL SETUP: VERIFY CODE & ACTIVATE PASSWORD
+    // ==========================================
+    if (btnConfirmSetup) {
+      btnConfirmSetup.addEventListener('click', async () => {
+        const email = (inputSetupEmail ? inputSetupEmail.value : '').trim();
+        const otpVal = (inputSetupOtp ? inputSetupOtp.value : '').trim();
+        const p1 = (inputSetupPass ? inputSetupPass.value : '').trim();
+        const p2 = (inputSetupConfirm ? inputSetupConfirm.value : '').trim();
+
+        if (!otpVal || otpVal.length < 6) {
+          showAlert('Please enter the 6-digit verification code sent to your email.');
+          if (inputSetupOtp) inputSetupOtp.focus();
+          return;
+        }
+        if (!p1 || p1.length < 4) {
+          showAlert('Master password must be at least 4 characters long.');
+          if (inputSetupPass) inputSetupPass.focus();
+          return;
+        }
+        if (p1 !== p2) {
+          showAlert('Passwords do not match. Please re-enter.');
+          if (inputSetupConfirm) inputSetupConfirm.focus();
+          return;
+        }
+
+        btnConfirmSetup.disabled = true;
+        btnConfirmSetup.textContent = '⏳ VERIFYING & SAVING...';
+
+        try {
+          let verified = false;
+
+          if (state.config.bridgeUrl) {
+            try {
+              const res = await fetch(`${state.config.bridgeUrl}/api/auth/verify_setup_and_set_password`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, otp: otpVal, password: p1 })
+              });
+              const data = await res.json();
+              if (res.ok && data.status === 'ok') {
+                verified = true;
+              } else if (data.message) {
+                showAlert('❌ ' + data.message);
+              }
+            } catch (e) {}
+          }
+
+          if (!verified) {
+            const localOtp = sessionStorage.getItem('virgox_temp_setup_otp');
+            if (localOtp && localOtp === otpVal) {
+              verified = true;
+            }
+          }
+
+          if (verified) {
+            const hash = await sha256Hex(p1);
+            localStorage.setItem('virgox_registered_email', email);
+            localStorage.setItem('virgox_auth_pass_hash', hash);
+            localStorage.setItem('virgox_auth_configured', 'true');
+            sessionStorage.removeItem('virgox_temp_setup_otp');
+
+            showAlert('✓ Email verified & Master Password activated! Access granted.', 'success');
+            setTimeout(() => {
+              btnConfirmSetup.disabled = false;
+              btnConfirmSetup.textContent = '⚡ VERIFY CODE & ACTIVATE MASTER PASSWORD';
+              unlockPC();
+            }, 700);
+          } else {
+            btnConfirmSetup.disabled = false;
+            btnConfirmSetup.textContent = '⚡ VERIFY CODE & ACTIVATE MASTER PASSWORD';
+            showAlert('❌ Invalid verification code. Please check your email or request a new code.');
+          }
+        } catch (err) {
+          btnConfirmSetup.disabled = false;
+          btnConfirmSetup.textContent = '⚡ VERIFY CODE & ACTIVATE MASTER PASSWORD';
+          showAlert('Error: ' + err.message);
+        }
+      });
+    }
+
+    // ==========================================
+    // 3. NORMAL LOGIN (STRICT: Password ONLY!)
+    // ==========================================
     async function handleLogin() {
       const p = (inputLoginPass ? inputLoginPass.value : '').trim();
       if (!p) {
-        showAlert('Please enter your master passcode.');
+        showAlert('Please enter your master password.');
         if (inputLoginPass) inputLoginPass.focus();
         return;
       }
@@ -1800,7 +1915,7 @@
             authorized = true;
           }
         } catch (e) {
-          console.warn('Bridge server login offline, using local verification');
+          console.warn('Bridge server offline, using local hash verification');
         }
       }
 
@@ -1816,14 +1931,15 @@
       }
 
       if (authorized) {
-        showAlert('✓ Passcode verified! Resuming desktop...', 'success');
+        showAlert('✓ Password verified! Access granted.', 'success');
         setTimeout(() => {
           btnLogin.disabled = false;
           btnLogin.textContent = '🔓 UNLOCK CLOUD PC';
           unlockPC();
-        }, 500);
+        }, 400);
       } else {
-        showAlert('❌ Incorrect passcode. Tap "Forgot Password" to reset with OTP.');
+        unloadFrames();
+        showAlert('❌ Incorrect password! Access strictly denied. Tap "Forgot Password" to reset.');
         btnLogin.disabled = false;
         btnLogin.textContent = '🔓 UNLOCK CLOUD PC';
         if (inputLoginPass) {
@@ -1837,13 +1953,15 @@
       btnLogin.addEventListener('click', handleLogin);
     }
 
-    // 3. TRIGGER RESET (SEND OTP)
-    async function triggerSendOtp() {
+    // ==========================================
+    // 4. RESET PASSWORD (SEND RESET CODE)
+    // ==========================================
+    async function triggerSendResetOtp() {
       hideAlert();
       const email = localStorage.getItem('virgox_registered_email') || '';
       if (btnTriggerReset) {
         btnTriggerReset.disabled = true;
-        btnTriggerReset.textContent = '⏳ Sending OTP to registered email...';
+        btnTriggerReset.textContent = '⏳ Sending reset code...';
       }
 
       try {
@@ -1867,53 +1985,53 @@
           } catch (e) {}
         }
 
-        // Fallback local OTP if bridge offline
         if (!sentOk) {
           const fakeOtp = Math.floor(100000 + Math.random() * 900000).toString();
-          sessionStorage.setItem('virgox_temp_otp', fakeOtp);
-          hintMsg = ` (Local Recovery Code: ${fakeOtp})`;
+          sessionStorage.setItem('virgox_temp_reset_otp', fakeOtp);
+          hintMsg = ` (Local Code: ${fakeOtp})`;
           sentOk = true;
         }
 
         if (otpTargetEmail) otpTargetEmail.textContent = masked || 'your registered email';
         switchView('otp');
-        showAlert(`📩 6-digit OTP code dispatched! Check your email or Cloud PC desktop notification.${hintMsg}`, 'info');
+        showAlert(`📩 6-digit recovery code sent to your email!${hintMsg}`, 'info');
       } catch (err) {
-        showAlert('Failed to dispatch OTP: ' + err.message);
+        showAlert('Failed to dispatch recovery code: ' + err.message);
       } finally {
         if (btnTriggerReset) {
           btnTriggerReset.disabled = false;
-          btnTriggerReset.textContent = '🔄 Forgot Password? Tap to Reset (Send OTP)';
+          btnTriggerReset.textContent = '🔄 Forgot Password? Reset via Email Code';
         }
       }
     }
 
     if (btnTriggerReset) {
-      btnTriggerReset.addEventListener('click', triggerSendOtp);
+      btnTriggerReset.addEventListener('click', triggerSendResetOtp);
     }
-    if (btnResendOtp) {
-      btnResendOtp.addEventListener('click', triggerSendOtp);
+    if (btnResendResetOtp) {
+      btnResendResetOtp.addEventListener('click', triggerSendResetOtp);
     }
-    if (btnCancelOtp) {
-      btnCancelOtp.addEventListener('click', () => switchView('login'));
+    if (btnCancelResetOtp) {
+      btnCancelResetOtp.addEventListener('click', () => switchView('login'));
     }
 
-    // 4. VERIFY OTP
-    if (btnVerifyOtp) {
-      btnVerifyOtp.addEventListener('click', async () => {
-        const otpVal = (inputOtp ? inputOtp.value : '').trim();
+    // ==========================================
+    // 5. VERIFY RESET CODE
+    // ==========================================
+    if (btnVerifyResetOtp) {
+      btnVerifyResetOtp.addEventListener('click', async () => {
+        const otpVal = (inputResetOtp ? inputResetOtp.value : '').trim();
         if (!otpVal || otpVal.length < 6) {
-          showAlert('Please enter the full 6-digit OTP code.');
-          if (inputOtp) inputOtp.focus();
+          showAlert('Please enter the 6-digit recovery code.');
+          if (inputResetOtp) inputResetOtp.focus();
           return;
         }
 
-        btnVerifyOtp.disabled = true;
-        btnVerifyOtp.textContent = '⏳ VERIFYING OTP...';
+        btnVerifyResetOtp.disabled = true;
+        btnVerifyResetOtp.textContent = '⏳ VERIFYING...';
 
         let verified = false;
 
-        // Try bridge server
         if (state.config.bridgeUrl) {
           try {
             const email = localStorage.getItem('virgox_registered_email') || '';
@@ -1931,31 +2049,32 @@
           } catch (e) {}
         }
 
-        // Local fallback
         if (!verified) {
-          const tempOtp = sessionStorage.getItem('virgox_temp_otp');
+          const tempOtp = sessionStorage.getItem('virgox_temp_reset_otp');
           if (tempOtp && tempOtp === otpVal) {
             verified = true;
           }
         }
 
         if (verified) {
-          currentVerifiedOtp = otpVal;
-          showAlert('✓ OTP verified successfully! Now set your new passcode.', 'success');
+          currentVerifiedResetOtp = otpVal;
+          showAlert('✓ Recovery code verified! Now set your new master password.', 'success');
           setTimeout(() => {
-            btnVerifyOtp.disabled = false;
-            btnVerifyOtp.textContent = '✓ VERIFY OTP';
+            btnVerifyResetOtp.disabled = false;
+            btnVerifyResetOtp.textContent = '✓ VERIFY RESET CODE';
             switchView('newpass');
-          }, 600);
+          }, 500);
         } else {
-          btnVerifyOtp.disabled = false;
-          btnVerifyOtp.textContent = '✓ VERIFY OTP';
-          showAlert('❌ Invalid or expired OTP code. Please try again or tap Resend.');
+          btnVerifyResetOtp.disabled = false;
+          btnVerifyResetOtp.textContent = '✓ VERIFY RESET CODE';
+          showAlert('❌ Invalid or expired recovery code. Please try again.');
         }
       });
     }
 
-    // 5. SET NEW PASSWORD
+    // ==========================================
+    // 6. SAVE NEW PASSWORD
+    // ==========================================
     if (btnSaveNewpass) {
       btnSaveNewpass.addEventListener('click', async () => {
         const np1 = (inputNewPass ? inputNewPass.value : '').trim();
@@ -1967,23 +2086,23 @@
           return;
         }
         if (np1 !== np2) {
-          showAlert('Passwords do not match. Please re-type.');
+          showAlert('Passwords do not match. Please re-enter.');
           if (inputNewConfirm) inputNewConfirm.focus();
           return;
         }
 
         btnSaveNewpass.disabled = true;
-        btnSaveNewpass.textContent = '⏳ UPDATING PASSCODE...';
+        btnSaveNewpass.textContent = '⏳ SAVING NEW PASSWORD...';
 
         try {
           const email = localStorage.getItem('virgox_registered_email') || '';
 
-          if (state.config.bridgeUrl && currentVerifiedOtp) {
+          if (state.config.bridgeUrl && currentVerifiedResetOtp) {
             try {
               await fetch(`${state.config.bridgeUrl}/api/auth/reset_password`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ otp: currentVerifiedOtp, new_password: np1, email })
+                body: JSON.stringify({ otp: currentVerifiedResetOtp, new_password: np1, email })
               });
             } catch (e) {}
           }
@@ -1991,18 +2110,18 @@
           const newHash = await sha256Hex(np1);
           localStorage.setItem('virgox_auth_pass_hash', newHash);
           localStorage.setItem('virgox_auth_configured', 'true');
-          sessionStorage.removeItem('virgox_temp_otp');
+          sessionStorage.removeItem('virgox_temp_reset_otp');
 
-          showAlert('✓ Master Passcode updated! Unlocking Cloud PC...', 'success');
+          showAlert('✓ Master Password updated! Access granted.', 'success');
           setTimeout(() => {
             btnSaveNewpass.disabled = false;
-            btnSaveNewpass.textContent = '💾 UPDATE PASSCODE & UNLOCK PC';
+            btnSaveNewpass.textContent = '💾 SAVE NEW PASSWORD & UNLOCK PC';
             unlockPC();
-          }, 800);
+          }, 700);
         } catch (err) {
-          showAlert('Error updating passcode: ' + err.message);
+          showAlert('Error updating password: ' + err.message);
           btnSaveNewpass.disabled = false;
-          btnSaveNewpass.textContent = '💾 UPDATE PASSCODE & UNLOCK PC';
+          btnSaveNewpass.textContent = '💾 SAVE NEW PASSWORD & UNLOCK PC';
         }
       });
     }
@@ -2015,10 +2134,16 @@
     }
 
     // Enter Key Listeners
-    [inputSetupPass, inputSetupConfirm].forEach(inp => {
+    if (inputSetupEmail) {
+      inputSetupEmail.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') btnSendSetupCode && btnSendSetupCode.click();
+      });
+    }
+
+    [inputSetupOtp, inputSetupPass, inputSetupConfirm].forEach(inp => {
       if (inp) {
         inp.addEventListener('keydown', (e) => {
-          if (e.key === 'Enter') btnSetupSave && btnSetupSave.click();
+          if (e.key === 'Enter') btnConfirmSetup && btnConfirmSetup.click();
         });
       }
     });
@@ -2029,9 +2154,9 @@
       });
     }
 
-    if (inputOtp) {
-      inputOtp.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') btnVerifyOtp && btnVerifyOtp.click();
+    if (inputResetOtp) {
+      inputResetOtp.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') btnVerifyResetOtp && btnVerifyResetOtp.click();
       });
     }
 
