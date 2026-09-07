@@ -92,6 +92,7 @@
           <div class="mode-toggles">
             <button id="btn-toggle-eco" class="cyber-btn xs neon-green" title="Toggle Low Phone RAM / Eco Mode">⚡ Eco RAM: <span id="eco-state">ON</span></button>
             <button id="btn-orientation" class="cyber-btn xs neon-purple" title="Toggle Portrait / Landscape">📱 Portrait</button>
+            <button id="btn-custom-res" class="cyber-btn xs neon-pink" title="Change Screen Resolution">🖥️ Res: <span id="res-label">1600x720</span></button>
             <button id="btn-toggle-keyboard" class="cyber-btn xs neon-cyan" title="Open Phone Keyboard">⌨️ Type</button>
             <button id="btn-hand-mode" class="cyber-btn xs neon-amber" title="Toggle Hand Pan/Travel Mode">
               ✋ Hand: <span id="hand-state">OFF</span>
@@ -395,8 +396,40 @@
       </div>
     </div>
 
+    <!-- Resolution Selector Modal -->
+    <div id="res-modal" class="modal-backdrop hidden">
+      <div class="cyber-modal">
+        <div class="modal-header">
+          <h3>🖥️ SCREEN RESOLUTION SELECTOR</h3>
+          <button id="close-res-modal" class="cyber-btn sm">&times;</button>
+        </div>
+        <div class="modal-body">
+          <p style="color:var(--text-muted); font-size:0.85rem; margin-bottom:12px;">Choose a quick preset or enter custom dimensions for your phone or display.</p>
+          
+          <div class="quick-preset-actions" style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:16px;">
+            <button class="cyber-btn sm res-preset-btn" data-w="1600" data-h="720">📱 Moto G34/G45 (1600x720)</button>
+            <button class="cyber-btn sm res-preset-btn" data-w="1920" data-h="1080">💻 1080p FHD (1920x1080)</button>
+            <button class="cyber-btn sm res-preset-btn" data-w="1280" data-h="720">⚡ 720p HD (Fast)</button>
+            <button class="cyber-btn sm res-preset-btn" data-w="720" data-h="1600">📱 Portrait Phone (720x1600)</button>
+            <button class="cyber-btn sm res-preset-btn" data-w="1080" data-h="2400">📱 FHD+ Phone (1080x2400)</button>
+            <button class="cyber-btn sm res-preset-btn" data-w="1366" data-h="768">💻 Laptop (1366x768)</button>
+          </div>
+
+          <div style="background:rgba(0,255,255,0.05); border:1px solid rgba(0,255,255,0.2); padding:12px; border-radius:6px; margin-bottom:14px;">
+            <h4 style="margin:0 0 8px 0; color:var(--neon-cyan); font-size:0.9rem;">Custom Width & Height</h4>
+            <div style="display:flex; gap:10px; align-items:center;">
+              <input type="number" id="custom-res-w" class="cyber-input" placeholder="Width (e.g. 1600)" style="flex:1;" />
+              <span style="font-weight:bold; color:var(--neon-cyan);">✕</span>
+              <input type="number" id="custom-res-h" class="cyber-input" placeholder="Height (e.g. 720)" style="flex:1;" />
+            </div>
+            <button id="btn-apply-custom-res" class="cyber-btn neon-cyan" style="width:100%; margin-top:10px;">⚡ APPLY CUSTOM RESOLUTION</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </div>
 
-  <script src="app.js?v=20260907_02"></script>
+  <script src="app.js?v=20260907_03"></script>
 </body>
 </html>

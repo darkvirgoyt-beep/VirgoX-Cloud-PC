@@ -114,12 +114,19 @@ class BridgeHandler(BaseHTTPRequestHandler):
             self._respond_ok({"typed": len(text)})
 
         elif path == "/api/resolution":
-            mode = payload.get("mode", "landscape")
-            if mode == "portrait":
-                run_container_cmd("xrandr --newmode '720x1280_60.00' 74.50 720 748 768 800 1280 1283 1288 1320 -hsync +vsync 2>/dev/null || true; xrandr --addmode screen '720x1280_60.00' 2>/dev/null || true; xrandr --output screen --mode '720x1280_60.00' 2>/dev/null || xrandr -s 720x1280 2>/dev/null || true")
+            width = payload.get("width")
+            height = payload.get("height")
+            mode = payload.get("mode", "")
+            if width and height:
+                run_container_cmd(f"setres {int(width)} {int(height)}")
+                res_str = f"{width}x{height}"
+            elif mode:
+                run_container_cmd(f"setres {mode}")
+                res_str = mode
             else:
-                run_container_cmd("xrandr --output screen --mode '1280x720_60.00' 2>/dev/null || xrandr -s 1280x720 2>/dev/null || xrandr -s 1920x1080 2>/dev/null || true")
-            self._respond_ok({"resolution_mode": mode})
+                run_container_cmd("setres 1600 720")
+                res_str = "1600x720"
+            self._respond_ok({"resolution": res_str})
 
         elif path == "/api/launch":
             app = payload.get("app", "")

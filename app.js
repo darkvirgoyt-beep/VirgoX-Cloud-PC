@@ -130,6 +130,7 @@
     setupHandMode();
     setupKeyboard();
     setupOrientation();
+    setupResolution();
     setupTouchpad();
     setupZoom();
     setupCrosshair();
@@ -559,6 +560,59 @@
       btnOrientation.addEventListener('click', () => {
         const nextMode = state.orientation === 'landscape' ? 'portrait' : 'landscape';
         applyOrientation(nextMode);
+      });
+    }
+  }
+
+  // Screen Resolution Manager
+  function setupResolution() {
+    const btnCustomRes = document.getElementById('btn-custom-res');
+    const resModal = document.getElementById('res-modal');
+    const closeResModal = document.getElementById('close-res-modal');
+    const resLabel = document.getElementById('res-label');
+    const btnApplyCustom = document.getElementById('btn-apply-custom-res');
+    const inputW = document.getElementById('custom-res-w');
+    const inputH = document.getElementById('custom-res-h');
+    const presetBtns = document.querySelectorAll('.res-preset-btn');
+
+    if (btnCustomRes && resModal) {
+      btnCustomRes.addEventListener('click', () => {
+        resModal.classList.remove('hidden');
+      });
+    }
+
+    if (closeResModal && resModal) {
+      closeResModal.addEventListener('click', () => {
+        resModal.classList.add('hidden');
+      });
+      resModal.addEventListener('click', (e) => {
+        if (e.target === resModal) resModal.classList.add('hidden');
+      });
+    }
+
+    function applyRes(w, h) {
+      w = parseInt(w, 10);
+      h = parseInt(h, 10);
+      if (!w || !h || w < 320 || h < 240) {
+        alert('Please enter valid dimensions (min 320x240)');
+        return;
+      }
+      if (resLabel) resLabel.textContent = `${w}x${h}`;
+      sendAction('resolution', { width: w, height: h });
+      if (resModal) resModal.classList.add('hidden');
+    }
+
+    presetBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const w = btn.dataset.w;
+        const h = btn.dataset.h;
+        applyRes(w, h);
+      });
+    });
+
+    if (btnApplyCustom && inputW && inputH) {
+      btnApplyCustom.addEventListener('click', () => {
+        applyRes(inputW.value, inputH.value);
       });
     }
   }
