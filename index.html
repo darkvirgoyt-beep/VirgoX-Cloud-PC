@@ -1084,80 +1084,79 @@
             <span id="auth-lock-icon" class="auth-logo-icon">🔒</span>
           </div>
           <h2 id="auth-title">VIRGOX CLOUD OS GATEWAY</h2>
-          <p id="auth-subtitle">Strict Access Control • Commercial Client & Privacy Shield</p>
-          <div class="auth-mode-pills" style="display:flex; gap:8px; justify-content:center; margin-top:10px;">
-            <button id="btn-tab-pass-mode" class="cyber-btn xs neon-cyan active" type="button">🔑 Password Access</button>
-            <button id="btn-tab-token-mode" class="cyber-btn xs neon-green" type="button">🎫 Client Token Access</button>
+          <p id="auth-subtitle">Strict Access Control • Verify Gmail & Personal Password Gate</p>
+          <div class="auth-mode-pills" style="display:flex; gap:8px; justify-content:center; margin-top:10px; flex-wrap:wrap;">
+            <button id="btn-tab-pass-mode" class="cyber-btn xs neon-cyan active" type="button">🔑 Login (Enter Password)</button>
+            <button id="btn-tab-setup-mode" class="cyber-btn xs neon-green" type="button">✨ Verify Gmail & Set Password</button>
           </div>
         </div>
 
         <div id="auth-alert" class="auth-alert-msg hidden"></div>
 
-        <!-- VIEW 1: INITIAL SETUP (Instant Master Password Creation & Recovery Email) -->
+        <!-- VIEW 1: INITIAL SETUP: VERIFY GMAIL & SET PASSWORD -->
         <div id="auth-view-setup" class="auth-view hidden">
-          <p class="auth-desc">Welcome! Set your Master Password to strictly protect your Cloud PC from unauthorized access. Your recovery email will receive OTP codes if you ever forget your password.</p>
+          <p class="auth-desc">To strictly protect your Cloud PC, enter your Gmail to receive a 6-digit verification code. Once verified, you can set your own personal password.</p>
           
-          <div class="auth-form-group">
-            <label for="auth-setup-email">📧 Recovery & Cloud Email:</label>
-            <input type="email" id="auth-setup-email" class="cyber-input" placeholder="e.g. yourname@gmail.com" autocomplete="email" />
-            <span class="hint">Used for email cloud persistence and OTP password resets.</span>
+          <div id="setup-step1">
+            <div class="auth-form-group">
+              <label for="auth-setup-email">📧 Enter Your Gmail Address:</label>
+              <div style="display:flex; gap:8px;">
+                <input type="email" id="auth-setup-email" class="cyber-input" placeholder="e.g. yourname@gmail.com" autocomplete="email" style="flex:1;" />
+                <button id="btn-auth-send-setup-code" class="cyber-btn neon-cyan sm" type="button" style="white-space:nowrap; font-weight:700;">
+                  📨 SEND CODE
+                </button>
+              </div>
+              <span class="hint">A 6-digit security code will be sent to your Gmail.</span>
+            </div>
           </div>
 
-          <div class="auth-form-group">
-            <label for="auth-setup-pass">🔑 Create Master Password:</label>
-            <input type="password" id="auth-setup-pass" class="cyber-input" placeholder="Create your password (min 4 chars)" autocomplete="new-password" />
+          <div id="setup-step2" class="hidden" style="margin-top:14px; padding-top:12px; border-top:1px solid rgba(0,255,136,0.2);">
+            <div class="auth-form-group">
+              <label for="auth-setup-otp">📩 Enter 6-Digit Gmail Code:</label>
+              <input type="text" id="auth-setup-otp" class="cyber-input otp-code-box" placeholder="______" maxlength="6" inputmode="numeric" />
+            </div>
+
+            <div class="auth-form-group">
+              <label for="auth-setup-pass">🔑 Create Your Password:</label>
+              <input type="password" id="auth-setup-pass" class="cyber-input" placeholder="Enter your password (min 4 chars)" autocomplete="new-password" />
+            </div>
+
+            <div class="auth-form-group">
+              <label for="auth-setup-pass-confirm">🔑 Confirm Your Password:</label>
+              <input type="password" id="auth-setup-pass-confirm" class="cyber-input" placeholder="Re-enter password to confirm" autocomplete="new-password" />
+            </div>
+
+            <button id="btn-auth-confirm-setup" class="cyber-btn neon-green auth-submit-btn" type="button" style="margin-top:10px;">
+              🛡️ VERIFY GMAIL & SET MY PASSWORD
+            </button>
           </div>
 
-          <div class="auth-form-group">
-            <label for="auth-setup-pass-confirm">🔑 Confirm Master Password:</label>
-            <input type="password" id="auth-setup-pass-confirm" class="cyber-input" placeholder="Re-enter password to confirm" autocomplete="new-password" />
+          <div class="auth-footer-actions">
+            <button id="btn-auth-switch-login-link" class="cyber-btn text-btn" type="button">
+              🔑 Already verified? Log in with password
+            </button>
           </div>
-
-          <button id="btn-auth-instant-setup" class="cyber-btn neon-green auth-submit-btn" type="button">
-            🔒 ACTIVATE MASTER PASSWORD & ENTER PC
-          </button>
         </div>
 
         <!-- VIEW 2: NORMAL LOGIN (Strict: Password ONLY on every session/reopen) -->
         <div id="auth-view-login" class="auth-view hidden">
           <div class="auth-user-badge">
-            <span class="badge-label">SECURE OWNER:</span>
+            <span class="badge-label">REGISTERED USER:</span>
             <span id="auth-display-email" class="badge-email">user@...</span>
           </div>
           <div class="auth-form-group">
             <label for="auth-login-pass">🔑 Enter Master Password:</label>
-            <input type="password" id="auth-login-pass" class="cyber-input" placeholder="Enter your password to access Cloud PC" autocomplete="current-password" autofocus />
+            <input type="password" id="auth-login-pass" class="cyber-input" placeholder="Enter your set password to access Cloud PC" autocomplete="current-password" autofocus />
           </div>
           <button id="btn-auth-login" class="cyber-btn neon-cyan auth-submit-btn" type="button">
             🔓 UNLOCK CLOUD PC
           </button>
-          <div class="auth-footer-actions dual">
+          <div class="auth-footer-actions dual" style="flex-wrap:wrap; gap:8px;">
             <button id="btn-auth-trigger-reset" class="cyber-btn text-btn" type="button">
-              🔄 Reset via Email Code
+              🔄 Forgot Password? Reset via Gmail
             </button>
-            <button id="btn-auth-switch-token-link" class="cyber-btn text-btn" type="button" style="color:var(--neon-green);">
-              🎫 Use Client Token
-            </button>
-          </div>
-        </div>
-
-        <!-- VIEW 5: CLIENT LICENSE TOKEN LOGIN (Commercial Tool Access) -->
-        <div id="auth-view-token" class="auth-view hidden">
-          <div class="auth-user-badge">
-            <span class="badge-label">ACCESS MODE:</span>
-            <span class="badge-email" style="color:var(--neon-green);">COMMERCIAL CLIENT LICENSE</span>
-          </div>
-          <div class="auth-form-group">
-            <label for="auth-input-token">🎫 Enter Client License Token:</label>
-            <input type="text" id="auth-input-token" class="cyber-input" placeholder="e.g. VIRGOX-PRO-CLIENT-2026" autofocus />
-            <span class="hint">Instant access for buyers and authorized client workstations.</span>
-          </div>
-          <button id="btn-auth-token-login" class="cyber-btn neon-green auth-submit-btn" type="button">
-            🚀 UNLOCK CLOUD PC (CLIENT ACCESS)
-          </button>
-          <div class="auth-footer-actions">
-            <button id="btn-auth-switch-pass-link" class="cyber-btn text-btn" type="button">
-              🔑 Switch to Master Password Login
+            <button id="btn-auth-switch-setup-link" class="cyber-btn text-btn" type="button" style="color:var(--neon-green);">
+              ✨ Verify Gmail & Set Password
             </button>
           </div>
         </div>

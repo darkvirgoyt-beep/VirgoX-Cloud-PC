@@ -1089,40 +1089,54 @@ print(json.dumps(apps))
                     self._respond_error("Invalid verification code. Please check and re-enter.")
                 return
             del _setup_otps[email]
-            auth_data = {
-                "email": email,
+            auth_data = get_auth_data()
+            if "users" not in auth_data or not isinstance(auth_data["users"], dict):
+                auth_data["users"] = {}
+            auth_data["users"][email] = {
                 "password_hash": hash_password(password),
                 "created_at": time.strftime("%Y-%m-%d %H:%M:%S UTC", time.gmtime()),
-                "updated_at": time.strftime("%Y-%m-%d %H:%M:%S UTC", time.gmtime())
+                "verified": True
             }
+            auth_data["email"] = email
+            auth_data["password_hash"] = hash_password(password)
+            auth_data["updated_at"] = time.strftime("%Y-%m-%d %H:%M:%S UTC", time.gmtime())
             save_auth_data(auth_data)
+            log_user_activity(email, "REGISTER", "Verified Gmail via 6-digit OTP and set personal password")
             self._respond_ok({
                 "status": "ok",
-                "message": "Email verified & Master Password activated successfully!",
-                "email": mask_email(email)
+                "message": "Gmail verified & personal password activated successfully!",
+                "email": mask_email(email),
+                "raw_email": email
             })
 
         elif path == "/api/auth/setup":
-            email = payload.get("email", "").strip()
+            email = payload.get("email", "").strip().lower()
             password = payload.get("password", "").strip()
             if not email or not password:
                 self._respond_error("Email and password are required")
                 return
-            auth_data = {
-                "email": email,
+            auth_data = get_auth_data()
+            if "users" not in auth_data or not isinstance(auth_data["users"], dict):
+                auth_data["users"] = {}
+            auth_data["users"][email] = {
                 "password_hash": hash_password(password),
                 "created_at": time.strftime("%Y-%m-%d %H:%M:%S UTC", time.gmtime()),
-                "updated_at": time.strftime("%Y-%m-%d %H:%M:%S UTC", time.gmtime())
+                "verified": True
             }
+            auth_data["email"] = email
+            auth_data["password_hash"] = hash_password(password)
+            auth_data["updated_at"] = time.strftime("%Y-%m-%d %H:%M:%S UTC", time.gmtime())
             save_auth_data(auth_data)
             self._respond_ok({
                 "status": "ok",
                 "message": "Security passcode configured successfully",
-                "email": mask_email(email)
+                "email": mask_email(email),
+                "raw_email": email
             })
 
         elif path == "/api/auth/login":
             password = payload.get("password", "").strip()
+            email_in = payload.get("email", "").strip().lower()
             token_in = (payload.get("token") or payload.get("client_token") or "").strip()
             auth_data = get_auth_data()
 
@@ -1145,24 +1159,32 @@ print(json.dumps(apps))
                     })
                     return
 
-            if not auth_data.get("password_hash"):
-                self._respond_error("Passcode not configured yet")
+            users_dict = auth_data.get("users", {})
+            user_hash = None
+            resolved_email = email_in or auth_data.get("email", "")
+            if email_in and email_in in users_dict:
+                user_hash = users_dict[email_in].get("password_hash")
+            elif auth_data.get("password_hash"):
+                user_hash = auth_data.get("password_hash")
+
+            if not user_hash:
+                self._respond_error("No registered password found. Please tap 'Verify Gmail & Set Password'.")
                 return
-            if verify_password(auth_data["password_hash"], password):
+
+            if verify_password(user_hash, password):
                 token = secrets.token_hex(24)
-                email = auth_data.get("email", "")
-                log_user_activity(email, "LOGIN", "Verified master password & unlocked Cloud PC")
-                cloud = get_user_cloud(email)
+                log_user_activity(resolved_email, "LOGIN", "Verified user password & unlocked Cloud PC")
+                cloud = get_user_cloud(resolved_email)
                 self._respond_ok({
                     "status": "ok",
                     "authenticated": True,
                     "token": token,
-                    "email": mask_email(email),
-                    "raw_email": email,
+                    "email": mask_email(resolved_email),
+                    "raw_email": resolved_email,
                     "cloud": cloud
                 })
             else:
-                self._respond_error("Incorrect password or token. Please try again.")
+                self._respond_error("Incorrect password. Please verify and try again, or tap Reset.")
 
         elif path == "/api/auth/token_login":
             token_in = (payload.get("token") or payload.get("client_token") or "").strip()

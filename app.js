@@ -1961,7 +1961,6 @@
     const viewLogin = document.getElementById('auth-view-login');
     const viewOtp = document.getElementById('auth-view-otp');
     const viewNewpass = document.getElementById('auth-view-newpass');
-    const viewToken = document.getElementById('auth-view-token');
 
     // Inputs
     const inputSetupEmail = document.getElementById('auth-setup-email');
@@ -1970,7 +1969,6 @@
     const inputSetupConfirm = document.getElementById('auth-setup-pass-confirm');
 
     const inputLoginPass = document.getElementById('auth-login-pass');
-    const inputToken = document.getElementById('auth-input-token');
 
     const inputResetOtp = document.getElementById('auth-input-otp');
     const inputNewPass = document.getElementById('auth-input-new-pass');
@@ -1984,11 +1982,10 @@
     const btnSendSetupCode = document.getElementById('btn-auth-send-setup-code');
     const btnConfirmSetup = document.getElementById('btn-auth-confirm-setup');
     const btnLogin = document.getElementById('btn-auth-login');
-    const btnAuthTokenLogin = document.getElementById('btn-auth-token-login');
     const btnTabPassMode = document.getElementById('btn-tab-pass-mode');
-    const btnTabTokenMode = document.getElementById('btn-tab-token-mode');
-    const btnSwitchTokenLink = document.getElementById('btn-auth-switch-token-link');
-    const btnSwitchPassLink = document.getElementById('btn-auth-switch-pass-link');
+    const btnTabSetupMode = document.getElementById('btn-tab-setup-mode');
+    const btnSwitchLoginLink = document.getElementById('btn-auth-switch-login-link');
+    const btnSwitchSetupLink = document.getElementById('btn-auth-switch-setup-link');
     const btnTriggerReset = document.getElementById('btn-auth-trigger-reset');
     const btnVerifyResetOtp = document.getElementById('btn-auth-verify-otp');
     const btnResendResetOtp = document.getElementById('btn-auth-resend-otp');
@@ -2030,7 +2027,7 @@
 
     function switchView(viewName) {
       hideAlert();
-      [viewSetup, viewLogin, viewOtp, viewNewpass, viewToken].forEach(v => {
+      [viewSetup, viewLogin, viewOtp, viewNewpass].forEach(v => {
         if (v) v.classList.add('hidden');
       });
 
@@ -2039,28 +2036,19 @@
         if (authSubtitle) authSubtitle.textContent = 'Verify your email once & set master password to protect Cloud PC';
         if (authLockIcon) authLockIcon.textContent = '🛡️';
         if (viewSetup) viewSetup.classList.remove('hidden');
+        if (btnTabSetupMode) btnTabSetupMode.classList.add('active');
+        if (btnTabPassMode) btnTabPassMode.classList.remove('active');
         setTimeout(() => inputSetupEmail && inputSetupEmail.focus(), 100);
       } else if (viewName === 'login') {
         if (authTitle) authTitle.textContent = 'VIRGOX CLOUD OS GATEWAY';
-        if (authSubtitle) authSubtitle.textContent = 'Strict Access Control • Commercial Client & Privacy Shield';
+        if (authSubtitle) authSubtitle.textContent = 'Strict Access Control • Master Password Login';
         if (authLockIcon) authLockIcon.textContent = '🔒';
         if (viewLogin) viewLogin.classList.remove('hidden');
         if (btnTabPassMode) btnTabPassMode.classList.add('active');
-        if (btnTabTokenMode) btnTabTokenMode.classList.remove('active');
+        if (btnTabSetupMode) btnTabSetupMode.classList.remove('active');
         if (inputLoginPass) {
           inputLoginPass.value = '';
           setTimeout(() => inputLoginPass.focus(), 100);
-        }
-      } else if (viewName === 'token') {
-        if (authTitle) authTitle.textContent = 'COMMERCIAL CLIENT ACCESS';
-        if (authSubtitle) authSubtitle.textContent = 'Enter your Client License Token to access Cloud PC';
-        if (authLockIcon) authLockIcon.textContent = '🎫';
-        if (viewToken) viewToken.classList.remove('hidden');
-        if (btnTabTokenMode) btnTabTokenMode.classList.add('active');
-        if (btnTabPassMode) btnTabPassMode.classList.remove('active');
-        if (inputToken) {
-          inputToken.value = '';
-          setTimeout(() => inputToken.focus(), 100);
         }
       } else if (viewName === 'otp') {
         if (authTitle) authTitle.textContent = 'PASSWORD RESET VIA EMAIL';
@@ -2410,57 +2398,9 @@
     }
 
     if (btnTabPassMode) btnTabPassMode.addEventListener('click', () => switchView('login'));
-    if (btnTabTokenMode) btnTabTokenMode.addEventListener('click', () => switchView('token'));
-    if (btnSwitchTokenLink) btnSwitchTokenLink.addEventListener('click', () => switchView('token'));
-    if (btnSwitchPassLink) btnSwitchPassLink.addEventListener('click', () => switchView('login'));
-
-    if (btnAuthTokenLogin) {
-      btnAuthTokenLogin.addEventListener('click', async () => {
-        const token = (inputToken ? inputToken.value : '').trim();
-        if (!token) {
-          showAlert('Please enter your Client License Token.');
-          if (inputToken) inputToken.focus();
-          return;
-        }
-        btnAuthTokenLogin.disabled = true;
-        btnAuthTokenLogin.textContent = '⏳ Verifying token...';
-        try {
-          const url = state.config.bridgeUrl || window.location.origin;
-          const res = await fetch(`${url}/api/auth/token_login`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ token })
-          });
-          const data = await res.json();
-          if (res.ok && data.status === 'ok') {
-            sessionStorage.setItem('virgox_authenticated', 'true');
-            sessionStorage.setItem('virgox_client_token', token);
-            showAlert('✓ Client Token verified! Access granted.', 'success');
-            setTimeout(() => {
-              btnAuthTokenLogin.disabled = false;
-              btnAuthTokenLogin.textContent = '🚀 UNLOCK CLOUD PC (CLIENT ACCESS)';
-              unlockPC();
-            }, 300);
-          } else {
-            showAlert('❌ ' + (data.message || 'Invalid Client Token. Please verify with your seller.'));
-            btnAuthTokenLogin.disabled = false;
-            btnAuthTokenLogin.textContent = '🚀 UNLOCK CLOUD PC (CLIENT ACCESS)';
-          }
-        } catch (e) {
-          showAlert('❌ Server error verifying token.');
-          btnAuthTokenLogin.disabled = false;
-          btnAuthTokenLogin.textContent = '🚀 UNLOCK CLOUD PC (CLIENT ACCESS)';
-        }
-      });
-    }
-
-    if (inputToken) {
-      inputToken.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') {
-          if (btnAuthTokenLogin) btnAuthTokenLogin.click();
-        }
-      });
-    }
+    if (btnTabSetupMode) btnTabSetupMode.addEventListener('click', () => switchView('setup'));
+    if (btnSwitchLoginLink) btnSwitchLoginLink.addEventListener('click', () => switchView('login'));
+    if (btnSwitchSetupLink) btnSwitchSetupLink.addEventListener('click', () => switchView('setup'));
 
     // ==========================================
     // 4. RESET PASSWORD (SEND RESET CODE)
