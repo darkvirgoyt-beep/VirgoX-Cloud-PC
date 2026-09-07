@@ -915,58 +915,48 @@
     });
   }
 
-  // Remote Bridge API Calls
+  // Remote Bridge API Calls with safe fire-and-forget
+  let isSendingAction = false;
   function sendAction(action, payload) {
     if (!state.config.bridgeUrl) return;
-    fetch(`${state.config.bridgeUrl}/api/${action}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    }).catch(err => {
-      // Bridge is optional; silent catch
-    });
+    try {
+      fetch(`${state.config.bridgeUrl}/api/${action}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      }).catch(() => {});
+    } catch (e) {}
   }
 
-  // High-performance smooth mouse delta dispatcher (120fps display batching)
+  // High-performance smooth mouse delta dispatcher (Strict Throttled Queue: Max ~33 updates/sec)
   let pendingDx = 0;
   let pendingDy = 0;
-  let isDispatchingDelta = false;
+  let lastDispatchTime = 0;
+  let deltaTimer = null;
 
   function queueMouseDelta(dx, dy) {
     pendingDx += dx;
     pendingDy += dy;
-    if (!isDispatchingDelta) {
-      isDispatchingDelta = true;
-      if (window.requestAnimationFrame) {
-        window.requestAnimationFrame(dispatchDeltas);
-      } else {
-        setTimeout(dispatchDeltas, 8);
-      }
+
+    if (!deltaTimer) {
+      const now = Date.now();
+      const elapsed = now - lastDispatchTime;
+      const delay = elapsed >= 30 ? 0 : (30 - elapsed);
+      deltaTimer = setTimeout(flushMouseDeltas, delay);
     }
   }
 
-  function dispatchDeltas() {
-    if (Math.abs(pendingDx) < 0.2 && Math.abs(pendingDy) < 0.2) {
-      isDispatchingDelta = false;
-      return;
-    }
+  function flushMouseDeltas() {
+    deltaTimer = null;
+    lastDispatchTime = Date.now();
+
     const sendDx = Math.round(pendingDx);
     const sendDy = Math.round(pendingDy);
-    pendingDx -= sendDx;
-    pendingDy -= sendDy;
+    pendingDx = 0;
+    pendingDy = 0;
 
     if (sendDx !== 0 || sendDy !== 0) {
       sendAction('mouse_move', { dx: sendDx, dy: sendDy });
-    }
-
-    if (Math.abs(pendingDx) >= 0.2 || Math.abs(pendingDy) >= 0.2) {
-      if (window.requestAnimationFrame) {
-        window.requestAnimationFrame(dispatchDeltas);
-      } else {
-        setTimeout(dispatchDeltas, 8);
-      }
-    } else {
-      isDispatchingDelta = false;
     }
   }
 
