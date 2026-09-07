@@ -240,7 +240,28 @@ class BridgeHandler(BaseHTTPRequestHandler):
         parsed = urlparse(self.path)
         path = parsed.path
         length = int(self.headers.get("Content-Length", 0))
-        body = self.rfile.read(length).decode("utf-8") if length > 0 else "{}"
+
+        if path == "/api/upload":
+            qs = parse_qs(parsed.query)
+            filename = qs.get("filename", ["uploaded_file"])[0]
+            safe_name = os.path.basename(filename)
+            upload_dir = "/home/darkvirgoyt/scratch"
+            os.makedirs(upload_dir, exist_ok=True)
+            target_path = os.path.join(upload_dir, safe_name)
+            data = self.rfile.read(length) if length > 0 else b""
+            with open(target_path, "wb") as f:
+                f.write(data)
+            prebuilt_dir = "/home/darkvirgoyt/VirgoX-Elite-GamingOS-Rom-Motorola-G45-FogOs/prebuilt"
+            if os.path.exists(prebuilt_dir):
+                import shutil
+                try:
+                    shutil.copy2(target_path, os.path.join(prebuilt_dir, safe_name))
+                except Exception:
+                    pass
+            self._respond_ok({"status": "uploaded", "filename": safe_name, "bytes": len(data), "path": target_path})
+            return
+
+        body = self.rfile.read(length).decode("utf-8", errors="replace") if length > 0 else "{}"
         try:
             payload = json.loads(body)
         except Exception:
