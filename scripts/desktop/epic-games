@@ -1,14 +1,12 @@
 #!/bin/bash
-# ⚡ VirgoX Epic Games Launcher
+# ⚡ VirgoX Epic Games Launcher (Native Linux Client)
 export DISPLAY="${DISPLAY:-:1}"
-notify-send "🎮 Epic Games Launcher" "Launching Epic Games & Unreal Ecosystem..." -i /usr/share/icons/virgox/epicgames.svg 2>/dev/null || true
+notify-send "🎮 Epic Games Launcher" "Launching Native Epic Games & Games Hub..." -i /usr/share/icons/virgox/epicgames.svg 2>/dev/null || true
 
-# If Heroic or Wine Epic is installed, launch it; otherwise launch Epic Games App in dedicated window
 if which heroic >/dev/null 2>&1; then
-    exec heroic "$@"
+    exec heroic --no-sandbox "$@"
 elif [ -f "/config/.wine/drive_c/Program Files (x86)/Epic Games/Launcher/Portal/Binaries/Win64/EpicGamesLauncher.exe" ]; then
     exec wine "/config/.wine/drive_c/Program Files (x86)/Epic Games/Launcher/Portal/Binaries/Win64/EpicGamesLauncher.exe" -opengl
 else
-    # Dedicated isolated Epic Games client window
     exec google-chrome --app="https://store.epicgames.com" --no-sandbox --disable-dev-shm-usage --enable-features=VaapiVideoDecoder,WebRTCPipeWireCapturer --ignore-gpu-blocklist --window-size=1280,800 "$@"
 fi

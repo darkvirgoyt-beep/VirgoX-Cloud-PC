@@ -139,6 +139,8 @@
     setupTabsModal();
     setupDesktopRefresh();
     setupDesktopTrackpadOverlay();
+    setupVirtualPcKeyboard();
+    setupExternalMouseCapture();
     setupCopilot();
     setupFullscreen();
     checkConnectionStatus();
@@ -2082,6 +2084,61 @@
     // ==========================================
     // 2. INITIAL SETUP: VERIFY CODE & ACTIVATE PASSWORD
     // ==========================================
+    
+    // Instant Master Password Setup Handler
+    const btnInstantSetup = document.getElementById('btn-auth-instant-setup');
+    if (btnInstantSetup) {
+      btnInstantSetup.addEventListener('click', async () => {
+        const email = (inputSetupEmail ? inputSetupEmail.value : '').trim();
+        const p1 = (inputSetupPass ? inputSetupPass.value : '').trim();
+        const p2 = (inputSetupConfirm ? inputSetupConfirm.value : '').trim();
+
+        if (!email || !email.includes('@')) {
+          showAlert('Please enter your recovery email address.');
+          if (inputSetupEmail) inputSetupEmail.focus();
+          return;
+        }
+        if (!p1 || p1.length < 4) {
+          showAlert('Master password must be at least 4 characters long.');
+          if (inputSetupPass) inputSetupPass.focus();
+          return;
+        }
+        if (p1 !== p2) {
+          showAlert('Passwords do not match. Please re-enter.');
+          if (inputSetupConfirm) inputSetupConfirm.focus();
+          return;
+        }
+
+        btnInstantSetup.disabled = true;
+        btnInstantSetup.textContent = '⏳ SAVING & ACTIVATING...';
+
+        try {
+          if (state.config.bridgeUrl) {
+            await fetch(`${state.config.bridgeUrl}/api/auth/setup`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ email, password: p1 })
+            });
+          }
+          const hash = await sha256Hex(p1);
+          localStorage.setItem('virgox_registered_email', email);
+          localStorage.setItem('virgox_auth_pass_hash', hash);
+          localStorage.setItem('virgox_auth_configured', 'true');
+
+          showAlert('✓ Master Password created & Cloud PC secured! Access granted.', 'success');
+          setTimeout(() => {
+            btnInstantSetup.disabled = false;
+            btnInstantSetup.textContent = '🔒 ACTIVATE MASTER PASSWORD & ENTER PC';
+            unlockPC();
+          }, 600);
+        } catch (err) {
+          btnInstantSetup.disabled = false;
+          btnInstantSetup.textContent = '🔒 ACTIVATE MASTER PASSWORD & ENTER PC';
+          showAlert('Error: ' + err.message);
+        }
+      });
+    }
+
     if (btnConfirmSetup) {
       btnConfirmSetup.addEventListener('click', async () => {
         const email = (inputSetupEmail ? inputSetupEmail.value : '').trim();
@@ -2447,6 +2504,173 @@
   }
 
   // Launch
+  
+  // ==========================================
+  // ⌨️ Complete Virtual PC Keyboard Implementation
+  // ==========================================
+  function setupVirtualPcKeyboard() {
+    const kbModal = document.getElementById('virtual-pc-keyboard');
+    const btnToggle = document.getElementById('btn-toggle-pc-keyboard');
+    const btnClose = document.getElementById('btn-close-pc-keyboard');
+    if (!kbModal) return;
+
+    window.toggleVirtualKeyboard = function() {
+      kbModal.classList.toggle('hidden');
+    };
+
+    if (btnToggle) {
+      btnToggle.addEventListener('click', () => {
+        kbModal.classList.toggle('hidden');
+      });
+    }
+    if (btnClose) {
+      btnClose.addEventListener('click', () => {
+        kbModal.classList.add('hidden');
+      });
+    }
+
+    let isShift = false;
+    let isCaps = false;
+
+    const shiftBtn = document.getElementById('kb-shift-btn');
+    const capsBtn = document.getElementById('kb-caps-btn');
+
+    kbModal.querySelectorAll('.kb-key').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        let key = btn.getAttribute('data-key');
+        if (!key) return;
+
+        btn.classList.add('active');
+        setTimeout(() => btn.classList.remove('active'), 120);
+
+        if (key === 'Shift_L' || key === 'Shift_R') {
+          isShift = !isShift;
+          btn.classList.toggle('active', isShift);
+          return;
+        }
+        if (key === 'Caps_Lock') {
+          isCaps = !isCaps;
+          btn.classList.toggle('active', isCaps);
+          return;
+        }
+
+        if (key.length === 1 && /[a-z]/i.test(key)) {
+          if (isShift ^ isCaps) {
+            key = key.toUpperCase();
+          } else {
+            key = key.toLowerCase();
+          }
+        }
+
+        if (state.config.bridgeUrl) {
+          fetch(`${state.config.bridgeUrl}/api/key`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ key: key })
+          }).catch(() => {});
+        }
+
+        if (isShift) {
+          isShift = false;
+          if (shiftBtn) shiftBtn.classList.remove('active');
+        }
+      });
+    });
+  }
+
+  // ==========================================
+  // 🖱️ External Hardware Mouse & Pointer Lock
+  // ==========================================
+  function setupExternalMouseCapture() {
+    const btnLock = document.getElementById('btn-toggle-mouse-lock');
+    if (!btnLock) return;
+
+    let isLocked = false;
+    let lastMoveTime = 0;
+    let accumulatedDx = 0;
+    let accumulatedDy = 0;
+
+    btnLock.addEventListener('click', () => {
+      const target = document.getElementById('desktop-wrapper') || document.body;
+      if (document.pointerLockElement) {
+        document.exitPointerLock();
+      } else {
+        target.requestPointerLock().catch(err => {
+          console.warn('Pointer lock error:', err);
+        });
+      }
+    });
+
+    document.addEventListener('pointerlockchange', () => {
+      isLocked = !!document.pointerLockElement;
+      if (btnLock) {
+        btnLock.textContent = isLocked ? '🔓 Unlock Mouse' : '🖱️ Lock Mouse';
+        btnLock.classList.toggle('active', isLocked);
+      }
+    });
+
+    document.addEventListener('mousemove', (e) => {
+      if (!isLocked) return;
+      accumulatedDx += e.movementX;
+      accumulatedDy += e.movementY;
+      const now = performance.now();
+      if (now - lastMoveTime >= 16) {
+        lastMoveTime = now;
+        sendNativeMouseMove(Math.round(accumulatedDx), Math.round(accumulatedDy));
+        accumulatedDx = 0;
+        accumulatedDy = 0;
+      }
+    });
+
+    document.addEventListener('mousedown', (e) => {
+      if (!isLocked) return;
+      const btn = e.button === 0 ? 1 : (e.button === 2 ? 3 : 2);
+      sendNativeMouseClick(btn);
+    });
+
+    // Smooth & Slow Optimized Scrolling Handler
+    let lastWheelTime = 0;
+    window.addEventListener('wheel', (e) => {
+      if (isLocked || (state && state.touchpadActive)) {
+        e.preventDefault();
+        const now = performance.now();
+        if (now - lastWheelTime < 50) return;
+        lastWheelTime = now;
+        const dir = e.deltaY > 0 ? 'down' : 'up';
+        sendNativeScroll(dir, 1);
+      }
+    }, { passive: false });
+  }
+
+  // ==========================================
+  // ⚡ PC Drivers & Hardware Switcher
+  // ==========================================
+  window.toggleDriver = async function(comp) {
+    if (!state.config.bridgeUrl) return;
+    try {
+      const res = await fetch(`${state.config.bridgeUrl}/api/driver/toggle`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ component: comp })
+      });
+      const data = await res.json();
+      if (data.status === 'ok' && data.drivers) {
+        const d = data.drivers;
+        const elGpu = document.getElementById('drv-gpu');
+        const elAudio = document.getElementById('drv-audio');
+        const elVsync = document.getElementById('drv-vsync');
+        const elMouse = document.getElementById('drv-mouse');
+        if (elGpu && d.gpu) elGpu.textContent = d.gpu;
+        if (elAudio && d.audio) elAudio.textContent = d.audio;
+        if (elVsync && d.vsync) elVsync.textContent = d.vsync;
+        if (elMouse && d.mouse) elMouse.textContent = d.mouse;
+      }
+    } catch (e) {}
+  };
+
+
   window.addEventListener('DOMContentLoaded', init);
 
 })();
