@@ -8,9 +8,9 @@
 
   // Default Configuration
   const DEFAULT_CONFIG = {
-    desktopUrl: 'https://api.trycloudflare.com',
-    terminalUrl: 'https://api.trycloudflare.com',
-    bridgeUrl: 'https://chocolate-embassy-mileage-align.trycloudflare.com',
+    desktopUrl: 'https://tennessee-departmental-concepts-modelling.trycloudflare.com',
+    terminalUrl: 'https://jason-hosted-robot-families.trycloudflare.com',
+    bridgeUrl: 'https://adware-expo-bigger-gary.trycloudflare.com',
     sensitivity: 1.5,
     crosshairEnabled: false,
     ecoMode: true

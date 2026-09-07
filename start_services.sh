@@ -42,9 +42,9 @@ setsid cloudflared tunnel --protocol http2 --url http://localhost:8888 </dev/nul
 
 echo "[*] Waiting for tunnel URLs..."
 for i in $(seq 1 30); do
-    DESKTOP_URL=$(grep -oE 'https://[a-z0-9-]+\.trycloudflare\.com' /tmp/cf_desktop.log 2>/dev/null | head -1 || true)
-    TERMINAL_URL=$(grep -oE 'https://[a-z0-9-]+\.trycloudflare\.com' /tmp/cf_terminal.log 2>/dev/null | head -1 || true)
-    BRIDGE_URL=$(grep -oE 'https://[a-z0-9-]+\.trycloudflare\.com' /tmp/cf_bridge.log 2>/dev/null | head -1 || true)
+    DESKTOP_URL=$(grep -oE 'https://[a-z0-9-]+\.trycloudflare\.com' /tmp/cf_desktop.log 2>/dev/null | grep -v 'api.trycloudflare.com' | head -1 || true)
+    TERMINAL_URL=$(grep -oE 'https://[a-z0-9-]+\.trycloudflare\.com' /tmp/cf_terminal.log 2>/dev/null | grep -v 'api.trycloudflare.com' | head -1 || true)
+    BRIDGE_URL=$(grep -oE 'https://[a-z0-9-]+\.trycloudflare\.com' /tmp/cf_bridge.log 2>/dev/null | grep -v 'api.trycloudflare.com' | head -1 || true)
 
     if [ -n "$DESKTOP_URL" ] && [ -n "$TERMINAL_URL" ] && [ -n "$BRIDGE_URL" ]; then
         break
