@@ -74,6 +74,10 @@
         <span class="tab-icon">⚡</span>
         <span class="tab-title">Quick Deck</span>
       </button>
+      <button class="tab-btn" data-tab="installed">
+        <span class="tab-icon">📦</span>
+        <span class="tab-title">Installed Apps</span>
+      </button>
       <button class="tab-btn" data-tab="copilot">
         <span class="tab-icon">🤖</span>
         <span class="tab-title">AI Copilot</span>
@@ -112,7 +116,9 @@
             <button id="toggle-crosshair" class="cyber-btn xs neon-green">
               🎯 Crosshair: <span id="crosshair-state">OFF</span>
             </button>
+            <button id="btn-toggle-data" class="cyber-btn xs neon-green" title="Toggle Cellular / WiFi Network Data (10 Gbps Turbo)">📶 Data: <span id="data-state">ON (10G)</span></button>
             <button id="reload-desktop" class="cyber-btn xs">🔄 Reload</button>
+            <button id="btn-header-logout" class="cyber-btn xs neon-pink" title="Lock Desktop & Logout">🔒 Logout</button>
             <button id="open-external-desktop" class="cyber-btn xs">↗ Open Tab</button>
           </div>
         </div>
@@ -546,6 +552,24 @@
               <img id="screen-img" src="assets/screen_placeholder.png" alt="Desktop Screen Preview" />
               <div class="snapshot-time" id="snapshot-time">Snapshot: Ready</div>
             </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- INSTALLED APPS DRAWER TAB -->
+      <section id="tab-installed" class="tab-content">
+        <div class="viewer-toolbar">
+          <div style="display:flex; align-items:center; gap:12px; flex:1; flex-wrap:wrap;">
+            <span class="tool-label">📦 ALL INSTALLED PC APPS:</span>
+            <input type="text" id="installed-apps-search" class="sidebar-search-input" placeholder="🔍 Search installed apps (OBS, Telegram, Minecraft, Steam...)" style="flex:1; min-width:240px; background:rgba(4,6,12,0.85); border:1px solid rgba(0,229,255,0.4); border-radius:6px; padding:6px 12px; color:#fff; font-size:0.85rem;" />
+            <button id="btn-refresh-installed-apps" class="cyber-btn xs neon-cyan">🔄 Refresh</button>
+            <button class="cyber-btn xs neon-purple" onclick="window.focusApp('windows_settings')">⚙️ Windows Settings</button>
+            <button class="cyber-btn xs neon-green" onclick="window.focusApp('playstore')">🛒 Play Store</button>
+          </div>
+        </div>
+        <div class="installed-apps-wrapper" style="padding:20px; overflow-y:auto; height:calc(100% - 50px);">
+          <div id="installed-apps-grid" class="ps-grid">
+            <p style="color:#64748b; font-size:0.9rem;">Loading installed applications...</p>
           </div>
         </div>
       </section>

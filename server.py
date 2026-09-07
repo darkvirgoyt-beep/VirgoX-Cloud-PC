@@ -601,6 +601,33 @@ class BridgeHandler(BaseHTTPRequestHandler):
             self._respond_ok({"status": "ok", "drivers": _driver_state})
             return
 
+        elif path == "/api/installed_apps":
+            code, out, _ = run_container_cmd("""python3 -c "
+import os, glob, json
+apps = []
+for p in sorted(glob.glob('/config/Desktop/*.desktop')):
+    try:
+        with open(p, 'r', encoding='utf-8', errors='ignore') as f:
+            name, comment, icon, ex = '', '', '', ''
+            for line in f:
+                line = line.strip()
+                if line.startswith('Name=') and not name: name = line[5:]
+                elif line.startswith('Comment=') and not comment: comment = line[8:]
+                elif line.startswith('Icon=') and not icon: icon = line[5:]
+                elif line.startswith('Exec=') and not ex: ex = line[5:]
+            if name:
+                apps.append({'name': name, 'comment': comment, 'icon': icon, 'exec': ex, 'filename': os.path.basename(p)})
+    except Exception:
+        pass
+print(json.dumps(apps))
+" """, user="abc")
+            try:
+                app_list = json.loads(out.strip()) if out.strip() else []
+            except Exception:
+                app_list = []
+            self._respond_ok({"status": "ok", "apps": app_list, "total": len(app_list)})
+            return
+
         # Static web app files serving
         static_dir = os.path.abspath(os.path.dirname(__file__))
         rel_path = path.lstrip("/")
@@ -857,6 +884,16 @@ class BridgeHandler(BaseHTTPRequestHandler):
         elif path == "/api/refresh_desktop":
             run_container_cmd("/usr/local/bin/refresh-desktop", user="abc")
             self._respond_ok({"refreshed": True})
+
+        elif path == "/api/launch_desktop_app":
+            app_file = payload.get("filename", "")
+            if app_file and app_file.endswith(".desktop"):
+                app_name = app_file[:-8]
+                run_container_cmd(f"gtk-launch '{app_name}' 2>/dev/null || (grep '^Exec=' '/config/Desktop/{app_file}' | head -n 1 | cut -d'=' -f2- | bash &) 2>/dev/null || true", user="abc")
+                self._respond_ok({"status": "ok", "launched": app_file})
+            else:
+                self._respond_error("Invalid desktop file")
+            return
 
         elif path == "/api/key":
             key = payload.get("key", "")

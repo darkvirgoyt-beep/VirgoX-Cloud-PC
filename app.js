@@ -145,6 +145,9 @@
     setupFullscreen();
     checkConnectionStatus();
     setupSecurityGate();
+    setupInstalledAppsDrawer();
+    setupNetworkControl();
+    setupExternalKeyboard();
   }
 
   // Frame Security Controllers: STRICT zero-trust isolation
@@ -263,6 +266,8 @@
       if (desktopFrame && desktopFrame.src !== 'about:blank') {
         desktopFrame.src = 'about:blank';
       }
+    } else if (targetTab === 'installed') {
+      if (window.loadInstalledApps) window.loadInstalledApps();
     } else {
       // Launcher / Deck tab: unload split frames
       if (splitDesktopFrame && splitDesktopFrame.src !== 'about:blank') {
@@ -2767,6 +2772,170 @@
     } catch (e) {}
   };
 
+  // ==========================================================================
+  // 📦 Installed Apps Drawer & Launcher Engine
+  // ==========================================================================
+  window.loadInstalledApps = async function() {
+    const grid = document.getElementById('installed-apps-grid');
+    if (!grid) return;
+    try {
+      const url = state.config.bridgeUrl || window.location.origin;
+      const res = await fetch(`${url}/api/installed_apps`);
+      const data = await res.json();
+      if (data.status === 'ok' && data.apps && data.apps.length > 0) {
+        window._installedAppsCache = data.apps;
+        renderInstalledApps(data.apps);
+      } else {
+        grid.innerHTML = '<p style="color:#64748b;">No desktop applications detected.</p>';
+      }
+    } catch (e) {
+      grid.innerHTML = '<p style="color:#ef4444;">Could not load applications catalog from Cloud PC.</p>';
+    }
+  };
+
+  function renderInstalledApps(apps) {
+    const grid = document.getElementById('installed-apps-grid');
+    if (!grid) return;
+    grid.innerHTML = apps.map(app => {
+      let iconHtml = '⚡';
+      if (app.icon) {
+        if (app.icon.endsWith('.svg') || app.icon.endsWith('.png') || app.icon.startsWith('/')) {
+          iconHtml = `<img src="${app.icon}" style="width:34px; height:34px; object-fit:contain;" onerror="this.outerHTML='⚡'" />`;
+        } else {
+          iconHtml = `<span style="font-size:1.6rem;">📱</span>`;
+        }
+      }
+      return `
+        <div class="ps-card" style="display:flex; flex-direction:column; gap:8px;">
+          <div class="ps-card-top" style="display:flex; gap:12px; align-items:center;">
+            <div style="width:48px; height:48px; display:flex; align-items:center; justify-content:center; background:rgba(0,229,255,0.08); border-radius:10px; border:1px solid rgba(0,229,255,0.25);">
+              ${iconHtml}
+            </div>
+            <div class="ps-app-meta" style="flex:1; overflow:hidden;">
+              <h4 style="margin:0; font-size:0.95rem; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${app.name}</h4>
+              <p class="dev" style="margin:2px 0 0 0; font-size:0.75rem; color:#94a3b8; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${app.comment || 'Verified PC Application'}</p>
+            </div>
+          </div>
+          <div style="margin-top:auto; display:flex; gap:8px;">
+            <button class="cyber-btn sm neon-green" style="flex:1; padding:6px 10px; font-size:0.8rem; font-weight:700;" onclick="window.launchDesktopApp('${app.filename}')">
+              ▶ LAUNCH
+            </button>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  window.launchDesktopApp = async function(filename) {
+    try {
+      const url = state.config.bridgeUrl || window.location.origin;
+      await fetch(`${url}/api/launch_desktop_app`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ filename })
+      });
+      const deskTab = document.querySelector('.tab-btn[data-tab="desktop"]');
+      if (deskTab) deskTab.click();
+    } catch (e) {}
+  };
+
+  function setupInstalledAppsDrawer() {
+    const searchInput = document.getElementById('installed-apps-search');
+    const refreshBtn = document.getElementById('btn-refresh-installed-apps');
+
+    if (refreshBtn) {
+      refreshBtn.addEventListener('click', window.loadInstalledApps);
+    }
+
+    if (searchInput) {
+      searchInput.addEventListener('input', () => {
+        const q = searchInput.value.trim().toLowerCase();
+        if (!window._installedAppsCache) return;
+        const filtered = window._installedAppsCache.filter(a =>
+          (a.name && a.name.toLowerCase().includes(q)) ||
+          (a.comment && a.comment.toLowerCase().includes(q)) ||
+          (a.filename && a.filename.toLowerCase().includes(q))
+        );
+        renderInstalledApps(filtered);
+      });
+    }
+
+    window.loadInstalledApps();
+  }
+
+  // ==========================================================================
+  // 📶 Mobile / WiFi Network Data Control & 10 Gbps Turbo Engine
+  // ==========================================================================
+  function setupNetworkControl() {
+    const btnToggleData = document.getElementById('btn-toggle-data');
+    const dataStateLabel = document.getElementById('data-state');
+    const btnHeaderLogout = document.getElementById('btn-header-logout');
+
+    let isDataOn = true;
+    if (btnToggleData) {
+      btnToggleData.addEventListener('click', () => {
+        isDataOn = !isDataOn;
+        if (isDataOn) {
+          btnToggleData.className = 'cyber-btn xs neon-green';
+          if (dataStateLabel) dataStateLabel.textContent = 'ON (10G)';
+          if (navigator.vibrate) navigator.vibrate(25);
+        } else {
+          btnToggleData.className = 'cyber-btn xs neon-pink';
+          if (dataStateLabel) dataStateLabel.textContent = 'OFF (Airplane)';
+          if (navigator.vibrate) navigator.vibrate([30, 60, 30]);
+        }
+      });
+    }
+
+    if (btnHeaderLogout) {
+      btnHeaderLogout.addEventListener('click', () => {
+        sessionStorage.removeItem('virgox_authenticated');
+        location.reload();
+      });
+    }
+
+    // Auto-lock when tab visibility is hidden
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'hidden') {
+        sessionStorage.removeItem('virgox_authenticated');
+      }
+    });
+  }
+
+  // ==========================================================================
+  // ⌨️ External Keyboard & Special Keys Support (Zero Delay)
+  // ==========================================================================
+  function setupExternalKeyboard() {
+    window.addEventListener('keydown', (e) => {
+      const tag = (e.target && e.target.tagName) || '';
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+      if (state.activeTab !== 'desktop') return;
+      if (sessionStorage.getItem('virgox_authenticated') !== 'true') return;
+
+      let k = e.key;
+      if (k === ' ') k = 'space';
+      else if (k === 'Enter') k = 'Return';
+      else if (k === 'Backspace') k = 'BackSpace';
+      else if (k === 'Escape') k = 'Escape';
+      else if (k === 'ArrowUp') k = 'Up';
+      else if (k === 'ArrowDown') k = 'Down';
+      else if (k === 'ArrowLeft') k = 'Left';
+      else if (k === 'ArrowRight') k = 'Right';
+      else if (k === 'Tab') { e.preventDefault(); k = 'Tab'; }
+      else if (k === 'Delete') k = 'Delete';
+      else if (k === 'Control') k = 'Control_L';
+      else if (k === 'Alt') { e.preventDefault(); k = 'Alt_L'; }
+      else if (k === 'Meta') { e.preventDefault(); k = 'Super_L'; }
+
+      const url = state.config.bridgeUrl || window.location.origin;
+      fetch(`${url}/api/key`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ key: k }),
+        keepalive: true
+      }).catch(() => {});
+    });
+  }
 
   window.addEventListener('DOMContentLoaded', init);
 
