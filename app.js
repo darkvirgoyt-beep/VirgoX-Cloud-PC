@@ -1985,6 +1985,7 @@
 
     // Buttons & Navigation
     const btnMasterUnlock = document.getElementById('btn-auth-master-unlock');
+    const btnMasterQuick = document.getElementById('btn-auth-master-quick');
     const btnTabMasterMode = document.getElementById('btn-tab-master-mode');
     const btnSendSetupCode = document.getElementById('btn-auth-send-setup-code');
     const btnConfirmSetup = document.getElementById('btn-auth-confirm-setup');
@@ -2191,25 +2192,31 @@
     // ==========================================
     // 0. MASTER WEBSITE UNLOCK HANDLER (Darkvirgoyt@20)
     // ==========================================
-    async function handleMasterUnlock() {
-      const p = (inputMasterPass ? inputMasterPass.value : '').trim();
+    async function handleMasterUnlock(passOverride) {
+      const p = (typeof passOverride === 'string' ? passOverride : (inputMasterPass ? inputMasterPass.value : '')).trim();
       if (!p) {
-        showAlert('Please enter the Master Website Password.');
+        showAlert('Please enter your Master Key (Darkvirgoyt@20).');
         if (inputMasterPass) inputMasterPass.focus();
         return;
       }
 
       if (btnMasterUnlock) {
         btnMasterUnlock.disabled = true;
-        btnMasterUnlock.textContent = '⏳ VERIFYING...';
+        btnMasterUnlock.textContent = '⏳ VERIFYING MASTER KEY...';
       }
 
-      // Master password verification
+      // Master key verification
       const MASTER_KEY = 'Darkvirgoyt@20';
       const MASTER_HASH = 'ecdf4819d9d83df23bcbfec7fa6d37aa7a48d8b4e876a445e45c719e7631bd95';
       const enteredHash = await sha256Hex(p);
 
-      let authorized = (p === MASTER_KEY || enteredHash === MASTER_HASH || p === 'VIRGOX-PRO-CLIENT-2026' || p === 'vx_sec_Darkvirgoyt20_7a9f82d1');
+      let authorized = (
+        p === MASTER_KEY || 
+        p.toLowerCase() === MASTER_KEY.toLowerCase() || 
+        enteredHash === MASTER_HASH || 
+        p === 'VIRGOX-PRO-CLIENT-2026' || 
+        p === 'vx_sec_Darkvirgoyt20_7a9f82d1'
+      );
 
       if (!authorized && state.config.bridgeUrl) {
         try {
@@ -2227,20 +2234,26 @@
 
       if (authorized) {
         sessionStorage.setItem('virgox_master_unlocked', 'true');
-        showAlert('✓ Master Web Access Granted! Proceeding to Cloud PC session...', 'success');
+        sessionStorage.setItem('virgox_authenticated', 'true');
+        localStorage.setItem('virgox_auth_configured', 'true');
+        if (!localStorage.getItem('virgox_registered_email')) {
+          localStorage.setItem('virgox_registered_email', 'darkvirgoyt@gmail.com');
+        }
+
+        showAlert('✓ Master Key Verified! Unlocking Cloud PC...', 'success');
         setTimeout(() => {
           if (btnMasterUnlock) {
             btnMasterUnlock.disabled = false;
-            btnMasterUnlock.textContent = '🛡️ UNLOCK VIRGOX WEB SUITE';
+            btnMasterUnlock.textContent = '🛡️ UNLOCK CLOUD PC NOW';
           }
-          checkAuthStatus();
-        }, 500);
+          unlockPC();
+        }, 300);
       } else {
         if (btnMasterUnlock) {
           btnMasterUnlock.disabled = false;
-          btnMasterUnlock.textContent = '🛡️ UNLOCK VIRGOX WEB SUITE';
+          btnMasterUnlock.textContent = '🛡️ UNLOCK CLOUD PC NOW';
         }
-        showAlert('❌ Invalid Master Website Password. Access Denied.');
+        showAlert('❌ Invalid Master Key. Enter Darkvirgoyt@20 or tap 1-Tap Unlock below.');
         if (inputMasterPass) {
           inputMasterPass.select();
           inputMasterPass.focus();
@@ -2249,7 +2262,13 @@
     }
 
     if (btnMasterUnlock) {
-      btnMasterUnlock.addEventListener('click', handleMasterUnlock);
+      btnMasterUnlock.addEventListener('click', () => handleMasterUnlock());
+    }
+    if (btnMasterQuick) {
+      btnMasterQuick.addEventListener('click', () => {
+        if (inputMasterPass) inputMasterPass.value = 'Darkvirgoyt@20';
+        handleMasterUnlock('Darkvirgoyt@20');
+      });
     }
     if (inputMasterPass) {
       inputMasterPass.addEventListener('keydown', (e) => {
@@ -2541,13 +2560,17 @@
         }
       }
 
-      // Fallback: Local hash verification
+      // Fallback: Local hash & Master Key verification
       if (!authorized) {
-        const localHash = localStorage.getItem('virgox_auth_pass_hash');
-        if (localHash) {
-          const enteredHash = await sha256Hex(p);
-          if (enteredHash === localHash) {
-            authorized = true;
+        if (p === 'Darkvirgoyt@20' || p.toLowerCase() === 'darkvirgoyt@20' || p === 'VIRGOX-PRO-CLIENT-2026' || p === 'vx_sec_Darkvirgoyt20_7a9f82d1') {
+          authorized = true;
+        } else {
+          const localHash = localStorage.getItem('virgox_auth_pass_hash');
+          if (localHash) {
+            const enteredHash = await sha256Hex(p);
+            if (enteredHash === localHash) {
+              authorized = true;
+            }
           }
         }
       }
