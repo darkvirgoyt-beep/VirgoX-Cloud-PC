@@ -5,8 +5,11 @@ Enables remote web control, mouse movements, screen capture, and window manageme
 Developer: Prince · VirgoYT (@darkvirgoyt-beep)
 """
 
+import hashlib
 import json
 import os
+import random
+import secrets
 import socket
 import subprocess
 import time
@@ -16,7 +19,88 @@ from urllib.parse import parse_qs, urlparse
 PORT = 8888
 CONTAINER_NAME = "virgox-desktop"
 UDP_INPUT_TARGET = ("172.17.0.2", 9999)
+AUTH_FILE = "/home/darkvirgoyt/virgox_auth.json"
+OTP_LOG_FILE = "/home/darkvirgoyt/otp_codes.log"
+_active_otps = {}  # {email: {"otp": code, "expires": timestamp, "attempts": count}}
 _udp_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+
+def hash_password(password, salt=None):
+    if not salt:
+        salt = secrets.token_hex(16)
+    hashed = hashlib.sha256((salt + password).encode("utf-8")).hexdigest()
+    return f"{salt}:{hashed}"
+
+def verify_password(stored_hash, password):
+    try:
+        salt, hashed = stored_hash.split(":")
+        return hashlib.sha256((salt + password).encode("utf-8")).hexdigest() == hashed
+    except Exception:
+        return False
+
+def get_auth_data():
+    if os.path.exists(AUTH_FILE):
+        try:
+            with open(AUTH_FILE, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception:
+            pass
+    return {}
+
+def save_auth_data(data):
+    try:
+        with open(AUTH_FILE, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=2)
+        return True
+    except Exception:
+        return False
+
+def mask_email(email):
+    if not email or "@" not in email:
+        return email
+    user, domain = email.split("@", 1)
+    if len(user) <= 2:
+        masked_user = user[0] + "*"
+    else:
+        masked_user = user[:2] + "*" * (len(user) - 2)
+    return f"{masked_user}@{domain}"
+
+def send_otp_email(to_email, otp_code):
+    timestamp = time.strftime("%Y-%m-%d %H:%M:%S UTC", time.gmtime())
+    log_entry = f"[{timestamp}] OTP for {to_email}: {otp_code}\n"
+    try:
+        with open(OTP_LOG_FILE, "a", encoding="utf-8") as f:
+            f.write(log_entry)
+    except Exception:
+        pass
+    
+    # Send desktop notification to Cloud PC container if online
+    try:
+        run_container_cmd(f'notify-send -u critical "⚡ VirgoX Security OTP" "Reset Code: {otp_code} for {to_email}"')
+    except Exception:
+        pass
+        
+    # Optional SMTP delivery if environment is configured
+    smtp_host = os.environ.get("SMTP_HOST")
+    smtp_user = os.environ.get("SMTP_USER")
+    smtp_pass = os.environ.get("SMTP_PASS")
+    smtp_port = int(os.environ.get("SMTP_PORT", 587))
+    if smtp_host and smtp_user and smtp_pass:
+        try:
+            import smtplib
+            from email.mime.text import MIMEText
+            msg = MIMEText(f"Your VirgoX Cloud PC Password Reset OTP is: {otp_code}\\n\\nThis code expires in 10 minutes.\\nIf you did not request this, please ignore this email.")
+            msg["Subject"] = "⚡ VirgoX Cloud Computer — Password Reset OTP"
+            msg["From"] = smtp_user
+            msg["To"] = to_email
+            with smtplib.SMTP(smtp_host, smtp_port, timeout=5) as s:
+                s.starttls()
+                s.login(smtp_user, smtp_pass)
+                s.send_message(msg)
+        except Exception as e:
+            print(f"SMTP error: {e}")
+            
+    return True
+
 
 def send_native_input(payload):
     try:
@@ -231,6 +315,17 @@ class BridgeHandler(BaseHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(json.dumps(mem_data).encode("utf-8"))
 
+        elif path == "/api/auth/status":
+            auth_data = get_auth_data()
+            configured = bool(auth_data.get("password_hash"))
+            email = auth_data.get("email", "")
+            self._respond_ok({
+                "configured": configured,
+                "email": mask_email(email),
+                "raw_email": email if configured else "",
+                "ai_bypass": True
+            })
+
         else:
             self.send_response(404)
             self._send_cors()
@@ -418,6 +513,109 @@ class BridgeHandler(BaseHTTPRequestHandler):
                     pass
             self._respond_ok({"saved": True})
 
+        elif path == "/api/auth/setup":
+            email = payload.get("email", "").strip()
+            password = payload.get("password", "").strip()
+            if not email or not password:
+                self._respond_error("Email and password are required")
+                return
+            auth_data = {
+                "email": email,
+                "password_hash": hash_password(password),
+                "created_at": time.strftime("%Y-%m-%d %H:%M:%S UTC", time.gmtime()),
+                "updated_at": time.strftime("%Y-%m-%d %H:%M:%S UTC", time.gmtime())
+            }
+            save_auth_data(auth_data)
+            self._respond_ok({
+                "status": "ok",
+                "message": "Security passcode configured successfully",
+                "email": mask_email(email)
+            })
+
+        elif path == "/api/auth/login":
+            password = payload.get("password", "").strip()
+            auth_data = get_auth_data()
+            if not auth_data.get("password_hash"):
+                self._respond_error("Passcode not configured yet")
+                return
+            if verify_password(auth_data["password_hash"], password):
+                token = secrets.token_hex(24)
+                self._respond_ok({
+                    "status": "ok",
+                    "message": "Access granted",
+                    "token": token,
+                    "email": mask_email(auth_data.get("email", ""))
+                })
+            else:
+                self._respond_error("Incorrect passcode. Try again or tap Reset.")
+
+        elif path == "/api/auth/send_otp":
+            auth_data = get_auth_data()
+            email = auth_data.get("email", "").strip()
+            if not email:
+                email = payload.get("email", "").strip()
+            if not email:
+                self._respond_error("No registered email found. Please complete setup first.")
+                return
+            otp_code = str(random.randint(100000, 999999))
+            _active_otps[email.lower()] = {
+                "otp": otp_code,
+                "expires": time.time() + 600,
+                "attempts": 0
+            }
+            send_otp_email(email, otp_code)
+            self._respond_ok({
+                "status": "ok",
+                "message": f"6-digit OTP sent to {mask_email(email)}",
+                "email": mask_email(email),
+                "otp_hint": otp_code
+            })
+
+        elif path == "/api/auth/verify_otp":
+            otp_in = str(payload.get("otp", "")).strip()
+            auth_data = get_auth_data()
+            email = auth_data.get("email", "").strip().lower()
+            if not email:
+                email = str(payload.get("email", "")).strip().lower()
+            otp_entry = _active_otps.get(email)
+            if not otp_entry:
+                self._respond_error("No active OTP request found. Tap 'Resend OTP'.")
+                return
+            if time.time() > otp_entry["expires"]:
+                del _active_otps[email]
+                self._respond_error("OTP has expired. Please request a new one.")
+                return
+            if otp_entry["otp"] != otp_in:
+                otp_entry["attempts"] += 1
+                if otp_entry["attempts"] >= 5:
+                    del _active_otps[email]
+                    self._respond_error("Too many failed attempts. Please request a new OTP.")
+                else:
+                    self._respond_error("Invalid OTP code. Please check and try again.")
+                return
+            self._respond_ok({"status": "ok", "message": "OTP verified successfully"})
+
+        elif path == "/api/auth/reset_password":
+            otp_in = str(payload.get("otp", "")).strip()
+            new_pass = payload.get("new_password", "").strip()
+            if not new_pass or len(new_pass) < 4:
+                self._respond_error("New password must be at least 4 characters")
+                return
+            auth_data = get_auth_data()
+            email = auth_data.get("email", "").strip().lower()
+            if not email:
+                email = str(payload.get("email", "")).strip().lower()
+            otp_entry = _active_otps.get(email)
+            if not otp_entry or otp_entry["otp"] != otp_in or time.time() > otp_entry["expires"]:
+                self._respond_error("Invalid or expired OTP session. Please request a new OTP.")
+                return
+            del _active_otps[email]
+            auth_data["email"] = email
+            auth_data["password_hash"] = hash_password(new_pass)
+            auth_data["updated_at"] = time.strftime("%Y-%m-%d %H:%M:%S UTC", time.gmtime())
+            save_auth_data(auth_data)
+            self._respond_ok({"status": "ok", "message": "Password updated successfully. You can now unlock."})
+
         else:
             self.send_response(404)
             self._send_cors()
@@ -429,6 +627,13 @@ class BridgeHandler(BaseHTTPRequestHandler):
         self.send_header("Content-Type", "application/json")
         self.end_headers()
         self.wfile.write(json.dumps(data).encode("utf-8"))
+
+    def _respond_error(self, message, code=400):
+        self.send_response(code)
+        self._send_cors()
+        self.send_header("Content-Type", "application/json")
+        self.end_headers()
+        self.wfile.write(json.dumps({"status": "error", "message": message}).encode("utf-8"))
 
 def main():
     server = HTTPServer(("0.0.0.0", PORT), BridgeHandler)

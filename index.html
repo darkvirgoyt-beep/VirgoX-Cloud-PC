@@ -45,6 +45,7 @@
       </div>
 
       <div class="header-actions">
+        <button id="btn-header-lock" class="cyber-btn sm neon-pink" title="Lock Cloud PC Session">🔒 LOCK</button>
         <button id="btn-header-keyboard" class="cyber-btn sm neon-cyan" title="Open Phone Keyboard Bridge">⌨️ TYPE</button>
         <button id="btn-fullscreen" class="cyber-btn sm" title="Toggle Fullscreen">⛶</button>
         <button id="btn-settings" class="cyber-btn sm neon-cyan" title="Configure URLs & Devices">⚙️</button>
@@ -568,6 +569,97 @@
             <button class="cyber-btn sm" onclick="window.focusApp('github')">🐙 GitHub</button>
             <button class="cyber-btn sm" onclick="window.focusApp('rom_builder')">🔨 ROM Builder</button>
           </div>
+        </div>
+      </div>
+    <!-- Security Gateway & Lock Screen Overlay -->
+    <div id="auth-overlay" class="auth-overlay-backdrop hidden">
+      <div class="auth-modal-card">
+        <div class="auth-scanner-line"></div>
+        <div class="auth-header">
+          <div class="auth-logo-ring">
+            <span id="auth-lock-icon" class="auth-logo-icon">🔒</span>
+          </div>
+          <h2 id="auth-title">VIRGOX SECURITY GATEWAY</h2>
+          <p id="auth-subtitle">Cyber OS Dual Phone & Cloud PC Protection</p>
+        </div>
+
+        <div id="auth-alert" class="auth-alert-msg hidden"></div>
+
+        <!-- VIEW 1: FIRST TIME SETUP -->
+        <div id="auth-view-setup" class="auth-view hidden">
+          <p class="auth-desc">Welcome! Set up your registered email and master passcode to secure your Cloud PC.</p>
+          <div class="auth-form-group">
+            <label for="auth-input-email">📧 Registered Recovery Email:</label>
+            <input type="email" id="auth-input-email" class="cyber-input" placeholder="e.g. yourname@gmail.com" autocomplete="email" />
+            <span class="hint">Used to receive reset OTP codes if you ever forget your password.</span>
+          </div>
+          <div class="auth-form-group">
+            <label for="auth-input-setup-pass">🔑 Master Passcode / PIN:</label>
+            <input type="password" id="auth-input-setup-pass" class="cyber-input" placeholder="Enter password (min 4 chars)" autocomplete="new-password" />
+          </div>
+          <div class="auth-form-group">
+            <label for="auth-input-setup-confirm">🔑 Confirm Master Passcode:</label>
+            <input type="password" id="auth-input-setup-confirm" class="cyber-input" placeholder="Re-type password" autocomplete="new-password" />
+          </div>
+          <button id="btn-auth-setup-save" class="cyber-btn neon-green auth-submit-btn">
+            ⚡ ACTIVATE & ENTER CLOUD PC
+          </button>
+        </div>
+
+        <!-- VIEW 2: LOGIN / UNLOCK (when reopening tab or locked) -->
+        <div id="auth-view-login" class="auth-view hidden">
+          <div class="auth-user-badge">
+            <span class="badge-label">REGISTERED ACCOUNT:</span>
+            <span id="auth-display-email" class="badge-email">user@...</span>
+          </div>
+          <div class="auth-form-group">
+            <label for="auth-input-login-pass">🔑 Enter Master Passcode:</label>
+            <input type="password" id="auth-input-login-pass" class="cyber-input" placeholder="Enter your password" autocomplete="current-password" autofocus />
+          </div>
+          <button id="btn-auth-login" class="cyber-btn neon-cyan auth-submit-btn">
+            🔓 UNLOCK CLOUD PC
+          </button>
+          <div class="auth-footer-actions">
+            <button id="btn-auth-trigger-reset" class="cyber-btn text-btn" type="button">
+              🔄 Forgot Password? Tap to Reset (Send OTP)
+            </button>
+          </div>
+        </div>
+
+        <!-- VIEW 3: OTP VERIFICATION (after tapping reset) -->
+        <div id="auth-view-otp" class="auth-view hidden">
+          <p class="auth-desc">A 6-digit security OTP code has been dispatched to <strong id="auth-otp-target-email" class="neon-text">your email</strong>.</p>
+          <div class="auth-form-group">
+            <label for="auth-input-otp">📩 Enter 6-Digit OTP Code:</label>
+            <input type="text" id="auth-input-otp" class="cyber-input otp-code-box" placeholder="______" maxlength="6" inputmode="numeric" pattern="[0-9]*" />
+          </div>
+          <button id="btn-auth-verify-otp" class="cyber-btn neon-purple auth-submit-btn">
+            ✓ VERIFY OTP
+          </button>
+          <div class="auth-footer-actions dual">
+            <button id="btn-auth-resend-otp" class="cyber-btn sm" type="button">🔄 Resend OTP</button>
+            <button id="btn-auth-cancel-otp" class="cyber-btn sm" type="button">← Back to Login</button>
+          </div>
+        </div>
+
+        <!-- VIEW 4: SET NEW PASSWORD (after OTP verified) -->
+        <div id="auth-view-newpass" class="auth-view hidden">
+          <p class="auth-desc" style="color:var(--neon-green);">✓ OTP verified successfully! Please enter your new master password.</p>
+          <div class="auth-form-group">
+            <label for="auth-input-new-pass">🔑 New Master Passcode:</label>
+            <input type="password" id="auth-input-new-pass" class="cyber-input" placeholder="Enter new password (min 4 chars)" />
+          </div>
+          <div class="auth-form-group">
+            <label for="auth-input-new-confirm">🔑 Confirm New Passcode:</label>
+            <input type="password" id="auth-input-new-confirm" class="cyber-input" placeholder="Re-type new password" />
+          </div>
+          <button id="btn-auth-save-newpass" class="cyber-btn neon-green auth-submit-btn">
+            💾 UPDATE PASSCODE & UNLOCK PC
+          </button>
+        </div>
+
+        <div class="auth-ai-note">
+          🤖 <span><strong>AI Engine Connected:</strong> Background AI and API services remain exempted & active.</span>
         </div>
       </div>
     </div>

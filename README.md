@@ -66,6 +66,17 @@ The Web Page includes a custom virtual trackpad designed specifically for touchs
    - **Left / Right Click Buttons:** Dedicated large touch buttons for Left-Click, Right-Click, and Double-Click.
    - **Drag Lock:** Toggle "DRAG LOCK" to hold the left mouse button down while dragging windows or selecting files.
 
+
+---
+
+## 🔒 Security Gateway: Master Passcode & Email OTP Recovery
+
+The web control suite includes a dedicated cybersecurity lock screen and authentication gateway:
+1. **Initial Setup:** On first launch, user configures their registered recovery email and sets a Master Passcode / PIN (minimum 4 characters).
+2. **Tab / Session Protection:** Closing the web browser automatically locks the session. Re-opening the website immediately presents the Master Passcode prompt.
+3. **Email OTP Reset Flow:** If the passcode is forgotten, tapping the **"Reset Password"** button dispatches a 6-digit one-time password (OTP) to the registered email and desktop notification. Once verified, the user creates a new passcode and resumes work.
+4. **AI Exemption:** Connected AI services, terminal commands, background pipelines, and the Bridge API (`port 8888`) remain completely operational without requiring passcode entry.
+
 ---
 
 ## 🔑 Persistent Web Logins & Google Chrome
