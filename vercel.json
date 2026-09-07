@@ -1,11 +1,5 @@
 {
-  "version": 2,
-  "routes": [
-    {
-      "src": "/(.*)",
-      "dest": "/$1"
-    }
-  ],
+  "cleanUrls": true,
   "headers": [
     {
       "source": "/(.*)",
@@ -16,9 +10,14 @@
         },
         {
           "key": "Access-Control-Allow-Methods",
-          "value": "GET, POST, OPTIONS"
+          "value": "GET, POST, OPTIONS, PUT, DELETE"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, no-store, must-revalidate"
         }
       ]
     }
   ]
 }
+
