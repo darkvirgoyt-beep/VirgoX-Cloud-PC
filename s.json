@@ -1,0 +1,21 @@
+{
+  "client_id": "VIRGOX-CLIENT-2026-X99",
+  "auth_secret": "vx_sec_Darkvirgoyt20_7a9f82d1",
+  "master_web_password": "Darkvirgoyt@20",
+  "auth_endpoint": "https://adware-expo-bigger-gary.trycloudflare.com/api/auth/verify",
+  "target_path": "/storage/emulated/0/boot/s.json",
+  "endpoints": {
+    "web_suite": "https://darkvirgoyt-beep.github.io/VirgoX-Cloud-Computer/",
+    "desktop_gui": "https://tennessee-departmental-concepts-modelling.trycloudflare.com",
+    "terminal_cli": "https://jason-hosted-robot-families.trycloudflare.com",
+    "bridge_api": "https://adware-expo-bigger-gary.trycloudflare.com"
+  },
+  "security_policy": {
+    "master_pass_enforced": true,
+    "personal_pc_pass_enforced": true,
+    "zero_trust_lock": true,
+    "otp_recovery": true
+  },
+  "version": "2.9.2",
+  "created_at": "2026-09-07T21:52:00Z"
+}

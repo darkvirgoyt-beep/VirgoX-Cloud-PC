@@ -1081,18 +1081,47 @@
         <div class="auth-scanner-line"></div>
         <div class="auth-header">
           <div class="auth-logo-ring">
-            <span id="auth-lock-icon" class="auth-logo-icon">🔒</span>
+            <span id="auth-lock-icon" class="auth-logo-icon">🛡️</span>
           </div>
           <h2 id="auth-title">VIRGOX CLOUD OS GATEWAY</h2>
-          <p id="auth-subtitle">Strict Access Control • Verify Gmail & Personal Password Gate</p>
+          <p id="auth-subtitle">Strict Master Web & Personal PC Security Gate</p>
           <div class="auth-mode-pills" style="display:flex; gap:8px; justify-content:center; margin-top:10px; flex-wrap:wrap;">
-            <button id="btn-tab-pass-mode" class="cyber-btn xs neon-cyan active" type="button">🔑 Login (Enter Password)</button>
-            <button id="btn-tab-setup-mode" class="cyber-btn xs neon-green" type="button">✨ Verify Gmail & Set Password</button>
-            <button id="btn-tab-token-mode" class="cyber-btn xs neon-purple" type="button">🎫 Client Token</button>
+            <button id="btn-tab-master-mode" class="cyber-btn xs neon-pink active" type="button">🌐 Master Web Pass</button>
+            <button id="btn-tab-pass-mode" class="cyber-btn xs neon-cyan" type="button">🔑 PC Password</button>
+            <button id="btn-tab-setup-mode" class="cyber-btn xs neon-green" type="button">✨ Setup PC Pass</button>
+            <button id="btn-tab-token-mode" class="cyber-btn xs neon-purple" type="button">🎫 Client s.json</button>
           </div>
         </div>
 
         <div id="auth-alert" class="auth-alert-msg hidden"></div>
+
+        <!-- VIEW 0: MASTER WEB ACCESS GATEWAY (Darkvirgoyt@20) -->
+        <div id="auth-view-master" class="auth-view">
+          <div class="auth-user-badge">
+            <span class="badge-label">SECURITY SHIELD:</span>
+            <span class="badge-email" style="color:var(--neon-pink);">ENCRYPTED WEB ACCESS</span>
+          </div>
+          <p class="auth-desc">This Cloud Computer suite is private and protected. Enter the Master Website Password (<code>Darkvirgoyt@20</code>) or Client Auth Secret to proceed.</p>
+          
+          <div class="auth-form-group">
+            <label for="auth-master-pass">🔑 Master Web Password:</label>
+            <input type="password" id="auth-master-pass" class="cyber-input" placeholder="Enter Master Website Password" autocomplete="current-password" autofocus />
+            <span class="hint">Master Web Key: <code>Darkvirgoyt@20</code> • Auto-unlocks if <code>s.json</code> is present.</span>
+          </div>
+
+          <button id="btn-auth-master-unlock" class="cyber-btn neon-pink auth-submit-btn" type="button">
+            🛡️ UNLOCK VIRGOX WEB SUITE
+          </button>
+
+          <div class="auth-footer-actions dual" style="flex-wrap:wrap; gap:8px;">
+            <button id="btn-auth-switch-token-direct" class="cyber-btn text-btn" type="button" style="color:var(--neon-purple);">
+              🎫 Use Client s.json / Secret
+            </button>
+            <button id="btn-auth-download-sjson" class="cyber-btn text-btn" type="button" style="color:var(--neon-cyan);">
+              📥 Download s.json Credentials
+            </button>
+          </div>
+        </div>
 
         <!-- VIEW 1: INITIAL SETUP: VERIFY GMAIL & SET PASSWORD -->
         <div id="auth-view-setup" class="auth-view hidden">

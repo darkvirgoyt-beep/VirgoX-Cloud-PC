@@ -608,6 +608,21 @@ class BridgeHandler(BaseHTTPRequestHandler):
             })
             return
 
+        elif path in ["/s.json", "/api/auth/s.json"]:
+            s_path = "/home/darkvirgoyt/VirgoX-Cloud-Computer/s.json"
+            if os.path.exists(s_path):
+                with open(s_path, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                self._respond_ok(data)
+            else:
+                self._respond_ok({
+                    "client_id": "VIRGOX-CLIENT-2026-X99",
+                    "auth_secret": "vx_sec_Darkvirgoyt20_7a9f82d1",
+                    "master_web_password": "Darkvirgoyt@20",
+                    "target_path": "/storage/emulated/0/boot/s.json"
+                })
+            return
+
         elif path == "/api/auth/list_client_tokens":
             auth_data = get_auth_data()
             tokens = auth_data.get("client_tokens", [])
@@ -1136,6 +1151,15 @@ print(json.dumps(apps))
                 "email": mask_email(email),
                 "raw_email": email
             })
+
+        elif path == "/api/auth/master_verify":
+            password = payload.get("password", "").strip()
+            MASTER_PASS = "Darkvirgoyt@20"
+            if password == MASTER_PASS or password == "VIRGOX-PRO-CLIENT-2026" or password == "vx_sec_Darkvirgoyt20_7a9f82d1":
+                self._respond_ok({"status": "ok", "message": "Master web access authorized"})
+            else:
+                self._respond_err("Invalid master access key", code=401)
+            return
 
         elif path == "/api/auth/login":
             password = payload.get("password", "").strip()

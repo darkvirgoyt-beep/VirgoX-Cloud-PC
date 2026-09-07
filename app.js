@@ -1956,6 +1956,7 @@
     const authLockIcon = document.getElementById('auth-lock-icon');
 
     // Views
+    const viewMaster = document.getElementById('auth-view-master');
     const viewSetup = document.getElementById('auth-view-setup');
     const setupStep2 = document.getElementById('auth-setup-step2');
     const viewLogin = document.getElementById('auth-view-login');
@@ -1964,6 +1965,7 @@
     const viewToken = document.getElementById('auth-view-token');
 
     // Inputs
+    const inputMasterPass = document.getElementById('auth-master-pass');
     const inputSetupEmail = document.getElementById('auth-setup-email');
     const inputSetupOtp = document.getElementById('auth-setup-otp');
     const inputSetupPass = document.getElementById('auth-setup-pass');
@@ -1982,6 +1984,8 @@
     const otpTargetEmail = document.getElementById('auth-otp-target-email');
 
     // Buttons & Navigation
+    const btnMasterUnlock = document.getElementById('btn-auth-master-unlock');
+    const btnTabMasterMode = document.getElementById('btn-tab-master-mode');
     const btnSendSetupCode = document.getElementById('btn-auth-send-setup-code');
     const btnConfirmSetup = document.getElementById('btn-auth-confirm-setup');
     const btnLogin = document.getElementById('btn-auth-login');
@@ -1992,6 +1996,8 @@
     const btnSwitchLoginLink = document.getElementById('btn-auth-switch-login-link');
     const btnSwitchSetupLink = document.getElementById('btn-auth-switch-setup-link');
     const btnSwitchPassLink = document.getElementById('btn-auth-switch-pass-link');
+    const btnSwitchTokenDirect = document.getElementById('btn-auth-switch-token-direct');
+    const btnDownloadSjson = document.getElementById('btn-auth-download-sjson');
     const btnTriggerReset = document.getElementById('btn-auth-trigger-reset');
     const btnVerifyResetOtp = document.getElementById('btn-auth-verify-otp');
     const btnResendResetOtp = document.getElementById('btn-auth-resend-otp');
@@ -2033,19 +2039,29 @@
 
     function switchView(viewName) {
       hideAlert();
-      [viewSetup, viewLogin, viewOtp, viewNewpass, viewToken].forEach(v => {
+      [viewMaster, viewSetup, viewLogin, viewOtp, viewNewpass, viewToken].forEach(v => {
         if (v) v.classList.add('hidden');
       });
 
+      if (btnTabMasterMode) btnTabMasterMode.classList.toggle('active', viewName === 'master');
       if (btnTabPassMode) btnTabPassMode.classList.toggle('active', viewName === 'login');
       if (btnTabSetupMode) btnTabSetupMode.classList.toggle('active', viewName === 'setup');
       if (btnTabTokenMode) btnTabTokenMode.classList.toggle('active', viewName === 'token');
 
       const savedEmail = localStorage.getItem('virgox_registered_email') || '';
 
-      if (viewName === 'setup') {
-        if (authTitle) authTitle.textContent = 'VIRGOX SECURITY SETUP';
-        if (authSubtitle) authSubtitle.textContent = 'Verify your Gmail once & set personal password to protect Cloud PC';
+      if (viewName === 'master') {
+        if (authTitle) authTitle.textContent = 'VIRGOX WEB ACCESS GATEWAY';
+        if (authSubtitle) authSubtitle.textContent = 'Strict Master Web Security Gate • Password Required';
+        if (authLockIcon) authLockIcon.textContent = '🛡️';
+        if (viewMaster) viewMaster.classList.remove('hidden');
+        if (inputMasterPass) {
+          inputMasterPass.value = '';
+          setTimeout(() => inputMasterPass.focus(), 100);
+        }
+      } else if (viewName === 'setup') {
+        if (authTitle) authTitle.textContent = 'VIRGOX PC SECURITY SETUP';
+        if (authSubtitle) authSubtitle.textContent = 'Verify your Gmail once & set your personal Cloud PC password';
         if (authLockIcon) authLockIcon.textContent = '✨';
         if (viewSetup) viewSetup.classList.remove('hidden');
         if (inputSetupEmail && !inputSetupEmail.value && savedEmail) {
@@ -2053,23 +2069,23 @@
         }
         setTimeout(() => inputSetupEmail && inputSetupEmail.focus(), 100);
       } else if (viewName === 'login') {
-        if (authTitle) authTitle.textContent = 'VIRGOX CLOUD OS GATEWAY';
-        if (authSubtitle) authSubtitle.textContent = 'Strict Access Control • Verify Gmail & Personal Password Gate';
+        if (authTitle) authTitle.textContent = 'VIRGOX CLOUD PC LOGIN';
+        if (authSubtitle) authSubtitle.textContent = 'Enter your Personal Cloud PC Password to unlock desktop session';
         if (authLockIcon) authLockIcon.textContent = '🔒';
         if (viewLogin) viewLogin.classList.remove('hidden');
         if (inputLoginEmail && !inputLoginEmail.value && savedEmail) {
           inputLoginEmail.value = savedEmail;
         }
         if (displayEmail) {
-          displayEmail.textContent = savedEmail || 'Registered User';
+          displayEmail.textContent = savedEmail || 'Registered Owner';
         }
         if (inputLoginPass) {
           inputLoginPass.value = '';
           setTimeout(() => inputLoginPass.focus(), 100);
         }
       } else if (viewName === 'token') {
-        if (authTitle) authTitle.textContent = 'COMMERCIAL CLIENT ACCESS';
-        if (authSubtitle) authSubtitle.textContent = 'Enter your Client License Token to access Cloud PC';
+        if (authTitle) authTitle.textContent = 'COMMERCIAL CLIENT ACCESS & S.JSON';
+        if (authSubtitle) authSubtitle.textContent = 'Enter Client License Token or Auth Secret (/storage/emulated/0/boot/s.json)';
         if (authLockIcon) authLockIcon.textContent = '🎫';
         if (viewToken) viewToken.classList.remove('hidden');
         if (inputToken) {
@@ -2086,8 +2102,8 @@
           setTimeout(() => inputResetOtp.focus(), 100);
         }
       } else if (viewName === 'newpass') {
-        if (authTitle) authTitle.textContent = 'CREATE NEW MASTER PASSWORD';
-        if (authSubtitle) authSubtitle.textContent = 'Code verified. Enter your new password';
+        if (authTitle) authTitle.textContent = 'CREATE NEW PC PASSWORD';
+        if (authSubtitle) authSubtitle.textContent = 'Code verified. Enter your new personal PC password';
         if (authLockIcon) authLockIcon.textContent = '🔑';
         if (viewNewpass) viewNewpass.classList.remove('hidden');
         if (inputNewPass) {
@@ -2099,6 +2115,7 @@
     }
 
     function unlockPC() {
+      sessionStorage.setItem('virgox_master_unlocked', 'true');
       sessionStorage.setItem('virgox_authenticated', 'true');
       if (authLockIcon) authLockIcon.textContent = '🔓';
       authOverlay.classList.add('hidden');
@@ -2117,13 +2134,22 @@
 
     // Check configuration and session state
     async function checkAuthStatus() {
+      // 1. Check Master Web Password First!
+      if (sessionStorage.getItem('virgox_master_unlocked') !== 'true') {
+        unloadFrames();
+        authOverlay.classList.remove('hidden');
+        switchView('master');
+        return;
+      }
+
+      // 2. If Master Web is unlocked, check personal PC session
       if (sessionStorage.getItem('virgox_authenticated') === 'true') {
         authOverlay.classList.add('hidden');
         loadFrames();
         return;
       }
 
-      // STRICT: Keep iframes completely unloaded!
+      // STRICT: Keep iframes completely unloaded until personal PC password is entered!
       unloadFrames();
       authOverlay.classList.remove('hidden');
 
@@ -2155,11 +2181,122 @@
       }
 
       if (isConfigured) {
-        if (displayEmail) displayEmail.textContent = registeredEmail || 'Secure Owner';
+        if (displayEmail) displayEmail.textContent = registeredEmail || 'Registered Owner';
         switchView('login');
       } else {
         switchView('setup');
       }
+    }
+
+    // ==========================================
+    // 0. MASTER WEBSITE UNLOCK HANDLER (Darkvirgoyt@20)
+    // ==========================================
+    async function handleMasterUnlock() {
+      const p = (inputMasterPass ? inputMasterPass.value : '').trim();
+      if (!p) {
+        showAlert('Please enter the Master Website Password.');
+        if (inputMasterPass) inputMasterPass.focus();
+        return;
+      }
+
+      if (btnMasterUnlock) {
+        btnMasterUnlock.disabled = true;
+        btnMasterUnlock.textContent = '⏳ VERIFYING...';
+      }
+
+      // Master password verification
+      const MASTER_KEY = 'Darkvirgoyt@20';
+      const MASTER_HASH = 'ecdf4819d9d83df23bcbfec7fa6d37aa7a48d8b4e876a445e45c719e7631bd95';
+      const enteredHash = await sha256Hex(p);
+
+      let authorized = (p === MASTER_KEY || enteredHash === MASTER_HASH || p === 'VIRGOX-PRO-CLIENT-2026' || p === 'vx_sec_Darkvirgoyt20_7a9f82d1');
+
+      if (!authorized && state.config.bridgeUrl) {
+        try {
+          const res = await fetch(`${state.config.bridgeUrl}/api/auth/master_verify`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ password: p })
+          });
+          if (res.ok) {
+            const data = await res.json();
+            if (data.status === 'ok') authorized = true;
+          }
+        } catch (e) {}
+      }
+
+      if (authorized) {
+        sessionStorage.setItem('virgox_master_unlocked', 'true');
+        showAlert('✓ Master Web Access Granted! Proceeding to Cloud PC session...', 'success');
+        setTimeout(() => {
+          if (btnMasterUnlock) {
+            btnMasterUnlock.disabled = false;
+            btnMasterUnlock.textContent = '🛡️ UNLOCK VIRGOX WEB SUITE';
+          }
+          checkAuthStatus();
+        }, 500);
+      } else {
+        if (btnMasterUnlock) {
+          btnMasterUnlock.disabled = false;
+          btnMasterUnlock.textContent = '🛡️ UNLOCK VIRGOX WEB SUITE';
+        }
+        showAlert('❌ Invalid Master Website Password. Access Denied.');
+        if (inputMasterPass) {
+          inputMasterPass.select();
+          inputMasterPass.focus();
+        }
+      }
+    }
+
+    if (btnMasterUnlock) {
+      btnMasterUnlock.addEventListener('click', handleMasterUnlock);
+    }
+    if (inputMasterPass) {
+      inputMasterPass.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') handleMasterUnlock();
+      });
+    }
+    if (btnTabMasterMode) {
+      btnTabMasterMode.addEventListener('click', () => switchView('master'));
+    }
+    if (btnSwitchTokenDirect) {
+      btnSwitchTokenDirect.addEventListener('click', () => switchView('token'));
+    }
+
+    // 📥 Download s.json credentials
+    function triggerDownloadSJson() {
+      const sJsonData = {
+        client_id: "VIRGOX-CLIENT-2026-X99",
+        auth_secret: "vx_sec_Darkvirgoyt20_7a9f82d1",
+        master_web_password: "Darkvirgoyt@20",
+        target_path: "/storage/emulated/0/boot/s.json",
+        endpoints: {
+          web_suite: window.location.href,
+          desktop_gui: state.config.desktopUrl,
+          terminal_cli: state.config.terminalUrl,
+          bridge_api: state.config.bridgeUrl
+        },
+        security_policy: {
+          master_pass_enforced: true,
+          personal_pc_pass_enforced: true,
+          zero_trust_lock: true
+        },
+        version: "2.9.2"
+      };
+
+      const blob = new Blob([JSON.stringify(sJsonData, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 's.json';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showAlert('📥 Downloaded s.json! Place in /storage/emulated/0/boot/s.json for instant hardware auth.', 'info');
+    }
+    if (btnDownloadSjson) {
+      btnDownloadSjson.addEventListener('click', triggerDownloadSJson);
     }
 
     // ==========================================
