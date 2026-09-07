@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>VirgoX Cloud Computer — Web Control Suite</title>
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="style.css?v=20260907_05" />
   <link rel="manifest" href="manifest.json" />
   <meta name="theme-color" content="#0a0b10" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -90,6 +90,9 @@
           </div>
           
           <div class="mode-toggles">
+            <button id="btn-toggle-screen-trackpad" class="cyber-btn xs neon-cyan active" title="Toggle Screen as Touchpad (Relative Mouse Control)">
+              🖱️ Touchpad: <span id="screen-trackpad-state">ON</span>
+            </button>
             <button id="btn-toggle-eco" class="cyber-btn xs neon-green" title="Toggle Low Phone RAM / Eco Mode">⚡ Eco RAM: <span id="eco-state">ON</span></button>
             <button id="btn-orientation" class="cyber-btn xs neon-purple" title="Toggle Portrait / Landscape">📱 Portrait</button>
             <button id="btn-custom-res" class="cyber-btn xs neon-pink" title="Change Screen Resolution">🖥️ Res: <span id="res-label">1600x720</span></button>
@@ -108,6 +111,16 @@
         </div>
 
         <div class="screen-wrapper" id="desktop-wrapper">
+          <!-- Screen Touchpad Overlay (Turns entire desktop view into a trackpad) -->
+          <div id="screen-touchpad-overlay" class="screen-touchpad-overlay">
+            <div id="screen-touchpad-badge" class="touchpad-hint-badge">
+              🖱️ TRACKPAD ACTIVE • 1-FINGER GLIDE • TAP CLICK • 2-FINGER SCROLL
+            </div>
+            <div id="touchpad-drag-indicator" class="touchpad-drag-indicator hidden">
+              ✊ DRAGGING
+            </div>
+          </div>
+
           <!-- Pan & Travel Hand Overlay -->
           <div id="pan-overlay" class="pan-overlay hidden">
             <div class="pan-badge">✋ HAND TRAVEL ACTIVE • SLIDE TO PAN • PINCH TO ZOOM</div>
@@ -460,6 +473,6 @@
 
   </div>
 
-  <script src="app.js?v=20260907_04"></script>
+  <script src="app.js?v=20260907_05"></script>
 </body>
 </html>

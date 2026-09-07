@@ -138,6 +138,7 @@
     setupSettingsModal();
     setupTabsModal();
     setupDesktopRefresh();
+    setupDesktopTrackpadOverlay();
     setupFullscreen();
     checkConnectionStatus();
   }
@@ -890,8 +891,221 @@
     });
   }
 
+  // High-performance smooth mouse delta dispatcher (60fps batching)
+  let pendingDx = 0;
+  let pendingDy = 0;
+  let isDispatchingDelta = false;
+
+  function queueMouseDelta(dx, dy) {
+    pendingDx += dx;
+    pendingDy += dy;
+    if (!isDispatchingDelta) {
+      dispatchDeltas();
+    }
+  }
+
+  function dispatchDeltas() {
+    if (Math.abs(pendingDx) < 0.5 && Math.abs(pendingDy) < 0.5) {
+      isDispatchingDelta = false;
+      return;
+    }
+    isDispatchingDelta = true;
+    const sendDx = Math.round(pendingDx);
+    const sendDy = Math.round(pendingDy);
+    pendingDx -= sendDx;
+    pendingDy -= sendDy;
+
+    sendAction('mouse_move', { dx: sendDx, dy: sendDy });
+    setTimeout(dispatchDeltas, 16);
+  }
+
   function sendMouseDelta(dx, dy) {
-    sendAction('mouse_move', { dx: Math.round(dx), dy: Math.round(dy) });
+    queueMouseDelta(dx, dy);
+  }
+
+  // Screen as Touchpad Controller (Relative Cursor Navigation & 2-Finger Scroll)
+  function setupDesktopTrackpadOverlay() {
+    const btnToggle = document.getElementById('btn-toggle-screen-trackpad');
+    const trackpadStateText = document.getElementById('screen-trackpad-state');
+    const overlay = document.getElementById('screen-touchpad-overlay');
+    const badge = document.getElementById('screen-touchpad-badge');
+    const dragIndicator = document.getElementById('touchpad-drag-indicator');
+
+    state.isScreenTrackpadActive = true;
+
+    function updateTrackpadUI() {
+      if (state.isScreenTrackpadActive) {
+        if (overlay) overlay.classList.remove('hidden');
+        if (btnToggle) {
+          btnToggle.classList.add('active', 'neon-cyan');
+          btnToggle.classList.remove('neon-green');
+        }
+        if (trackpadStateText) trackpadStateText.textContent = 'ON';
+      } else {
+        if (overlay) overlay.classList.add('hidden');
+        if (btnToggle) {
+          btnToggle.classList.remove('active', 'neon-cyan');
+          btnToggle.classList.add('neon-green');
+        }
+        if (trackpadStateText) trackpadStateText.textContent = 'OFF';
+      }
+    }
+
+    if (btnToggle) {
+      btnToggle.addEventListener('click', () => {
+        state.isScreenTrackpadActive = !state.isScreenTrackpadActive;
+        updateTrackpadUI();
+      });
+    }
+
+    if (!overlay) return;
+
+    let touchStartX = 0;
+    let touchStartY = 0;
+    let lastTouchX = 0;
+    let lastTouchY = 0;
+    let touchStartTime = 0;
+    let longPressTimer = null;
+    let isDragging = false;
+
+    let lastTapTime = 0;
+    let singleTapTimeout = null;
+
+    let twoFingerStartY = 0;
+    let twoFingerStartX = 0;
+    let twoFingerStartTime = 0;
+    let hasScrolled = false;
+
+    // Fade badge after 4 seconds
+    setTimeout(() => {
+      if (badge) badge.classList.add('fade');
+    }, 4000);
+
+    overlay.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+
+      if (e.touches.length === 1) {
+        const t = e.touches[0];
+        touchStartX = t.clientX;
+        touchStartY = t.clientY;
+        lastTouchX = t.clientX;
+        lastTouchY = t.clientY;
+        touchStartTime = Date.now();
+        isDragging = false;
+
+        // Long press (450ms) triggers Drag Mode
+        if (longPressTimer) clearTimeout(longPressTimer);
+        longPressTimer = setTimeout(() => {
+          isDragging = true;
+          if (dragIndicator) dragIndicator.classList.remove('hidden');
+          sendAction('mouse_drag', { state: 'down' });
+          if (navigator.vibrate) navigator.vibrate(40);
+        }, 450);
+
+      } else if (e.touches.length === 2) {
+        if (longPressTimer) clearTimeout(longPressTimer);
+        twoFingerStartX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+        twoFingerStartY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+        twoFingerStartTime = Date.now();
+        hasScrolled = false;
+      }
+    }, { passive: false });
+
+    overlay.addEventListener('touchmove', (e) => {
+      e.preventDefault();
+
+      if (e.touches.length === 1) {
+        const t = e.touches[0];
+        const dist = Math.hypot(t.clientX - touchStartX, t.clientY - touchStartY);
+
+        // If moved more than 8px before long press fired, cancel long press
+        if (dist > 8 && longPressTimer && !isDragging) {
+          clearTimeout(longPressTimer);
+          longPressTimer = null;
+        }
+
+        const dx = (t.clientX - lastTouchX) * state.config.sensitivity;
+        const dy = (t.clientY - lastTouchY) * state.config.sensitivity;
+
+        lastTouchX = t.clientX;
+        lastTouchY = t.clientY;
+
+        queueMouseDelta(dx, dy);
+
+      } else if (e.touches.length === 2) {
+        if (longPressTimer) clearTimeout(longPressTimer);
+        const currentY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+        const deltaY = currentY - twoFingerStartY;
+
+        if (Math.abs(deltaY) > 16) {
+          hasScrolled = true;
+          const direction = deltaY < 0 ? 'up' : 'down';
+          const steps = Math.min(4, Math.max(1, Math.round(Math.abs(deltaY) / 16)));
+          sendAction('mouse_scroll', { direction, steps });
+          twoFingerStartY = currentY;
+        }
+      }
+    }, { passive: false });
+
+    overlay.addEventListener('touchend', (e) => {
+      e.preventDefault();
+
+      if (longPressTimer) {
+        clearTimeout(longPressTimer);
+        longPressTimer = null;
+      }
+
+      if (isDragging) {
+        isDragging = false;
+        if (dragIndicator) dragIndicator.classList.add('hidden');
+        sendAction('mouse_drag', { state: 'up' });
+        return;
+      }
+
+      if (e.touches.length === 0) {
+        const now = Date.now();
+        const duration = now - touchStartTime;
+        const totalDist = Math.hypot(lastTouchX - touchStartX, lastTouchY - touchStartY);
+
+        // Tap detected if duration < 280ms and movement < 12px
+        if (duration < 280 && totalDist < 12) {
+          if (now - lastTapTime < 340) {
+            // DOUBLE TAP!
+            if (singleTapTimeout) {
+              clearTimeout(singleTapTimeout);
+              singleTapTimeout = null;
+            }
+            sendAction('mouse_click', { button: 1, double: true });
+            lastTapTime = 0;
+            if (navigator.vibrate) navigator.vibrate([25, 50, 25]);
+          } else {
+            // SINGLE TAP
+            lastTapTime = now;
+            singleTapTimeout = setTimeout(() => {
+              sendAction('mouse_click', { button: 1 });
+              if (navigator.vibrate) navigator.vibrate(20);
+            }, 340);
+          }
+        }
+      } else if (e.touches.length === 1 && hasScrolled === false) {
+        // If one finger lifted from a 2-finger tap without scrolling
+        if (Date.now() - twoFingerStartTime < 260) {
+          sendAction('mouse_click', { button: 3 }); // RIGHT CLICK!
+          if (navigator.vibrate) navigator.vibrate(35);
+        }
+      }
+    }, { passive: false });
+
+    overlay.addEventListener('touchcancel', () => {
+      if (longPressTimer) clearTimeout(longPressTimer);
+      if (isDragging) {
+        isDragging = false;
+        if (dragIndicator) dragIndicator.classList.add('hidden');
+        sendAction('mouse_drag', { state: 'up' });
+      }
+    });
+
+    updateTrackpadUI();
   }
 
   // Live Screen Snapshot

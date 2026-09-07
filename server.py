@@ -7,6 +7,7 @@ Developer: Prince · VirgoYT (@darkvirgoyt-beep)
 
 import json
 import os
+import socket
 import subprocess
 import time
 from http.server import BaseHTTPRequestHandler, HTTPServer
@@ -14,6 +15,15 @@ from urllib.parse import parse_qs, urlparse
 
 PORT = 8888
 CONTAINER_NAME = "virgox-desktop"
+UDP_INPUT_TARGET = ("172.17.0.2", 9999)
+_udp_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+
+def send_native_input(payload):
+    try:
+        _udp_sock.sendto(json.dumps(payload).encode("utf-8"), UDP_INPUT_TARGET)
+        return True
+    except Exception:
+        return False
 
 def run_container_cmd(cmd, user="abc"):
     full_cmd = f"docker exec -u {user} -e DISPLAY=:1 {CONTAINER_NAME} {cmd}"
@@ -88,23 +98,34 @@ class BridgeHandler(BaseHTTPRequestHandler):
         if path == "/api/mouse_move":
             dx = int(payload.get("dx", 0))
             dy = int(payload.get("dy", 0))
-            run_container_cmd(f"xdotool mousemove_relative -- {dx} {dy}")
+            if not send_native_input({"action": "move", "dx": dx, "dy": dy}):
+                run_container_cmd(f"xdotool mousemove_relative -- {dx} {dy}")
             self._respond_ok({"moved": [dx, dy]})
 
         elif path == "/api/mouse_click":
             btn = int(payload.get("button", 1))
             is_double = bool(payload.get("double", False))
-            if is_double:
-                run_container_cmd(f"xdotool click --repeat 2 --delay 100 {btn}")
-            else:
-                run_container_cmd(f"xdotool click {btn}")
+            if not send_native_input({"action": "click", "button": btn, "double": is_double}):
+                if is_double:
+                    run_container_cmd(f"xdotool click --repeat 2 --delay 100 {btn}")
+                else:
+                    run_container_cmd(f"xdotool click {btn}")
             self._respond_ok({"clicked": btn})
 
         elif path == "/api/mouse_drag":
             state = payload.get("state", "up")
-            action = "mousedown" if state == "down" else "mouseup"
-            run_container_cmd(f"xdotool {action} 1")
+            if not send_native_input({"action": "drag", "state": state}):
+                action = "mousedown" if state == "down" else "mouseup"
+                run_container_cmd(f"xdotool {action} 1")
             self._respond_ok({"drag_state": state})
+
+        elif path == "/api/mouse_scroll":
+            direction = payload.get("direction", "down")
+            steps = int(payload.get("steps", 1))
+            if not send_native_input({"action": "scroll", "direction": direction, "steps": steps}):
+                btn = 4 if direction == "up" else 5
+                run_container_cmd(f"xdotool click --repeat {steps} {btn}")
+            self._respond_ok({"scrolled": direction, "steps": steps})
 
         elif path == "/api/type":
             text = payload.get("text", "")
