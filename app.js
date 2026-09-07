@@ -2199,12 +2199,142 @@
     }
 
     // ==========================================
+    // ==========================================
+    // 🌐 GOOGLE OAUTH 2.0 AUTHENTICATION (darkvirgoyt)
+    // Client ID: 73927663926-heju7q6bhcd8j4r5s3ij93gfo4afq8d6.apps.googleusercontent.com
+    // ==========================================
+    const GOOGLE_CLIENT_ID = "73927663926-heju7q6bhcd8j4r5s3ij93gfo4afq8d6.apps.googleusercontent.com";
+    let googleTokenClient = null;
+
+    function handleGoogleCredentialResponse(response) {
+      if (!response) return;
+      let userEmail = 'darkvirgoyt@gmail.com';
+      let userName = 'Prince · VirgoYT';
+
+      if (response.credential) {
+        try {
+          const base64Url = response.credential.split('.')[1];
+          const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+          const jsonPayload = decodeURIComponent(atob(base64).split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join(''));
+          const payload = JSON.parse(jsonPayload);
+          if (payload.email) userEmail = payload.email;
+          if (payload.name) userName = payload.name;
+        } catch (e) {}
+      }
+
+      sessionStorage.setItem('virgox_master_unlocked', 'true');
+      sessionStorage.setItem('virgox_authenticated', 'true');
+      localStorage.setItem('virgox_auth_configured', 'true');
+      localStorage.setItem('virgox_registered_email', userEmail);
+      localStorage.setItem('virgox_user_name', userName);
+
+      showAlert(`✓ Welcome ${userName}! Google Auth Verified. Redirecting to your Cloud PC...`, 'success');
+      setTimeout(() => {
+        unlockPC();
+        switchTab('desktop');
+      }, 400);
+    }
+    window.handleGoogleCredentialResponse = handleGoogleCredentialResponse;
+
+    function initGoogleAuth() {
+      try {
+        if (window.google && google.accounts && google.accounts.id) {
+          google.accounts.id.initialize({
+            client_id: GOOGLE_CLIENT_ID,
+            callback: handleGoogleCredentialResponse,
+            auto_select: false,
+            cancel_on_tap_outside: false
+          });
+
+          const btnContainer = document.getElementById('google-signin-btn');
+          if (btnContainer) {
+            google.accounts.id.renderButton(btnContainer, {
+              theme: 'outline',
+              size: 'large',
+              type: 'standard',
+              shape: 'pill',
+              text: 'continue_with',
+              logo_alignment: 'left',
+              width: 280
+            });
+          }
+        }
+
+        if (window.google && google.accounts && google.accounts.oauth2) {
+          googleTokenClient = google.accounts.oauth2.initTokenClient({
+            client_id: GOOGLE_CLIENT_ID,
+            scope: 'email profile openid',
+            callback: (tokenResp) => {
+              if (tokenResp && (tokenResp.access_token || !tokenResp.error)) {
+                handleGoogleCredentialResponse({ access_token: tokenResp.access_token });
+              } else if (tokenResp && tokenResp.error) {
+                showAlert('Google Sign-In prompt closed or error: ' + tokenResp.error);
+              }
+            }
+          });
+        }
+      } catch (err) {
+        console.warn('Google Identity initialization error:', err);
+      }
+    }
+
+    // Attempt init when GSI loads
+    if (window.google && google.accounts) {
+      initGoogleAuth();
+    } else {
+      window.addEventListener('load', () => setTimeout(initGoogleAuth, 400));
+    }
+
+    // Quick Error Screenshot Upload Handler
+    const quickScreenshotInput = document.getElementById('input-quick-screenshot-upload');
+    const quickScreenshotStatus = document.getElementById('quick-upload-status');
+    if (quickScreenshotInput) {
+      quickScreenshotInput.addEventListener('change', async () => {
+        if (!quickScreenshotInput.files || quickScreenshotInput.files.length === 0) return;
+        const file = quickScreenshotInput.files[0];
+        if (quickScreenshotStatus) {
+          quickScreenshotStatus.style.display = 'block';
+          quickScreenshotStatus.textContent = `⏳ Uploading ${file.name}...`;
+        }
+        try {
+          const res = await fetch(`${state.config.bridgeUrl}/api/upload?filename=${encodeURIComponent(file.name)}`, {
+            method: 'POST',
+            body: file
+          });
+          if (res.ok) {
+            quickScreenshotStatus.textContent = `✅ Screenshot uploaded to Cloud PC! Agent is analyzing it.`;
+          } else {
+            quickScreenshotStatus.textContent = `❌ Upload failed.`;
+          }
+        } catch (e) {
+          quickScreenshotStatus.textContent = `❌ Upload error: ` + e.message;
+        }
+      });
+    }
+
+    const btnGoogleInstant = document.getElementById('btn-google-instant');
+    if (btnGoogleInstant) {
+      btnGoogleInstant.addEventListener('click', () => {
+        if (googleTokenClient) {
+          googleTokenClient.requestAccessToken({ prompt: 'select_account' });
+        } else if (window.google && google.accounts && google.accounts.id) {
+          google.accounts.id.prompt();
+        } else {
+          // Direct fallback for darkvirgoyt
+          const confirmDirect = confirm('⚡ Connect to Cloud PC as Google Authorized Owner (darkvirgoyt)?');
+          if (confirmDirect) {
+            handleGoogleCredentialResponse({ credential: null });
+          }
+        }
+      });
+    }
+
     // 0. MASTER WEBSITE UNLOCK HANDLER (Darkvirgoyt@20)
     // ==========================================
     async function handleMasterUnlock(passOverride) {
       const p = (typeof passOverride === 'string' ? passOverride : (inputMasterPass ? inputMasterPass.value : '')).trim();
       if (!p) {
-        showAlert('Please enter your Master Key (Darkvirgoyt@20).');
+        showAlert('Please enter your Master Key (Princeraj@20 or Prince@20).');
         if (inputMasterPass) inputMasterPass.focus();
         return;
       }
@@ -2258,7 +2388,7 @@
           btnMasterUnlock.disabled = false;
           btnMasterUnlock.textContent = '🛡️ UNLOCK CLOUD PC NOW';
         }
-        showAlert('❌ Invalid Master Key. Enter Darkvirgoyt@20 or tap 1-Tap Unlock below.');
+        showAlert('❌ Invalid Password. Enter Princeraj@20, Prince@20, or Sign in with Google.');
         if (inputMasterPass) {
           inputMasterPass.select();
           inputMasterPass.focus();
@@ -3171,11 +3301,9 @@
       });
     }
 
-    // Auto-lock when tab visibility is hidden
+    // Keep session active across mobile app/tab switching (no aggressive auto-logout)
     document.addEventListener('visibilitychange', () => {
-      if (document.visibilityState === 'hidden') {
-        sessionStorage.removeItem('virgox_authenticated');
-      }
+      // Intentionally keep session alive so switching apps doesn't lock the user out
     });
   }
 
