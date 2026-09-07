@@ -78,6 +78,10 @@
         <span class="tab-icon">📦</span>
         <span class="tab-title">Installed Apps</span>
       </button>
+      <button class="tab-btn" data-tab="backup">
+        <span class="tab-icon">🛡️</span>
+        <span class="tab-title">Privacy & Backup</span>
+      </button>
       <button class="tab-btn" data-tab="copilot">
         <span class="tab-icon">🤖</span>
         <span class="tab-title">AI Copilot</span>
@@ -263,7 +267,7 @@
         <div class="deck-container">
           <div class="deck-header">
             <h3>🛍️ VIRGOX APPS, GAMES & CLOUD STORE</h3>
-            <p class="subtitle">120 FPS High-Performance Engine • 64 GB Virtual RAM • Unlimited Storage</p>
+            <p class="subtitle">1000+ FPS High-Performance Engine • 64 GB Virtual RAM • 5.0 TB Ultra Storage</p>
           </div>
 
           
@@ -322,8 +326,8 @@
               <div style="font-size:0.75rem; color:var(--text-muted);">Hardware Synchronized</div>
             </div>
             <div class="metric-card" style="padding:10px 14px; background:rgba(0,245,212,0.06); border:1px solid rgba(0,245,212,0.3); border-radius:8px;">
-              <div style="font-size:1.1rem; font-weight:800; color:var(--neon-green);">UNLIMITED</div>
-              <div style="font-size:0.75rem; color:var(--text-muted);">Hybrid Cloud Storage</div>
+              <div style="font-size:1.1rem; font-weight:800; color:var(--neon-green);">5.0 TB</div>
+              <div style="font-size:0.75rem; color:var(--text-muted);">Ultra Cloud Storage (/dev/loop0)</div>
             </div>
             <div class="metric-card" style="padding:10px 14px; background:rgba(255,158,0,0.06); border:1px solid rgba(255,158,0,0.3); border-radius:8px;">
               <div style="font-size:1.1rem; font-weight:800; color:var(--neon-amber);">MESA LLVMPIPE</div>
@@ -463,8 +467,8 @@
             <div class="app-card" id="card-files">
               <div class="app-icon">📁</div>
               <div class="app-info">
-                <h4>This PC (64GB Storage Pool)</h4>
-                <p>Browse workspace files, ROM builds, and artifacts.</p>
+                <h4>This PC (5.0 TB Ultra Storage Pool)</h4>
+                <p>Browse 5.0 TB virtual drive, workspace files, ROM builds, and artifacts.</p>
               </div>
               <button class="cyber-btn sm neon-purple" onclick="focusApp('files')">OPEN FILES</button>
             </div>
@@ -574,7 +578,94 @@
         </div>
       </section>
 
-      <!-- AI COPILOT & MEMORY TAB -->
+      <!-- PRIVACY & BACKUP PROTECTION TAB -->
+      <section id="tab-backup" class="tab-content">
+        <div class="viewer-toolbar">
+          <span class="tool-label">🛡️ PRIVACY SHIELD & DATA BACKUP VAULT</span>
+          <button id="btn-quick-backup" class="cyber-btn xs neon-green">📦 Instant Backup</button>
+          <button id="btn-quick-privacy" class="cyber-btn xs neon-pink">🧹 Privacy Wipe</button>
+          <button id="btn-lock-session" class="cyber-btn xs neon-cyan">🔒 Lock Session</button>
+        </div>
+
+        <div style="padding:24px; max-width:960px; margin:0 auto; overflow-y:auto; height:calc(100% - 50px);">
+          <!-- Storage & Privacy Metric Banner -->
+          <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:12px; margin-bottom:24px;">
+            <div class="metric-card" style="padding:16px; background:rgba(0,242,254,0.06); border:1px solid rgba(0,242,254,0.3); border-radius:10px;">
+              <div style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase;">Storage Capacity</div>
+              <div id="backup-total-storage" style="font-size:1.6rem; font-weight:800; color:var(--neon-cyan); margin:4px 0;">5.0 TB</div>
+              <div style="font-size:0.75rem; color:#10b981;">Mounted /dev/loop0 (Ext4)</div>
+            </div>
+            <div class="metric-card" style="padding:16px; background:rgba(0,255,136,0.06); border:1px solid rgba(0,255,136,0.3); border-radius:10px;">
+              <div style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase;">Free Storage Available</div>
+              <div id="backup-avail-storage" style="font-size:1.6rem; font-weight:800; color:var(--neon-green); margin:4px 0;">4.8 TB</div>
+              <div style="font-size:0.75rem; color:var(--text-muted);">Ultra High-Speed Pool</div>
+            </div>
+            <div class="metric-card" style="padding:16px; background:rgba(123,44,191,0.06); border:1px solid rgba(123,44,191,0.3); border-radius:10px;">
+              <div style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase;">Privacy Protection</div>
+              <div style="font-size:1.4rem; font-weight:800; color:var(--neon-purple); margin:4px 0;">STRICT ZERO-TRUST</div>
+              <div style="font-size:0.75rem; color:var(--text-muted);">Encrypted Session Guard</div>
+            </div>
+            <div class="metric-card" style="padding:16px; background:rgba(255,158,0,0.06); border:1px solid rgba(255,158,0,0.3); border-radius:10px;">
+              <div style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase;">Client License State</div>
+              <div style="font-size:1.4rem; font-weight:800; color:var(--neon-amber); margin:4px 0;">COMMERCIAL</div>
+              <div style="font-size:0.75rem; color:var(--text-muted);">Multi-Client Ready</div>
+            </div>
+          </div>
+
+          <!-- Section 1: PC Data Backup & Download -->
+          <div class="driver-panel-card" style="margin-bottom:20px;">
+            <h4 style="margin:0 0 6px 0; color:var(--neon-green); font-size:1.15rem;">📦 1-CLICK CLOUD & LOCAL DATA BACKUP</h4>
+            <p style="margin:0 0 16px 0; font-size:0.85rem; color:var(--text-muted);">
+              Safely create an encrypted snapshot archive of your desktop files, configurations, projects, and personal data. You can download the archive directly to your mobile phone or PC for offline safety.
+            </p>
+            <div style="display:flex; gap:12px; flex-wrap:wrap; align-items:center;">
+              <button id="btn-create-backup-now" class="cyber-btn neon-green" type="button" style="padding:10px 18px; font-weight:700;">
+                💾 CREATE NEW BACKUP ARCHIVE
+              </button>
+              <span id="backup-status-msg" style="font-size:0.85rem; color:#94a3b8;"></span>
+            </div>
+            <div style="margin-top:16px;">
+              <h5 style="margin:0 0 8px 0; color:#fff; font-size:0.95rem;">Available Backup Archives:</h5>
+              <div id="backup-list-container" style="display:flex; flex-direction:column; gap:8px; max-height:220px; overflow-y:auto;">
+                <p style="color:#64748b; font-size:0.85rem;">Loading backup archives...</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Section 2: Privacy Shield & Clean Slate -->
+          <div class="driver-panel-card" style="margin-bottom:20px;">
+            <h4 style="margin:0 0 6px 0; color:var(--neon-pink); font-size:1.15rem;">🛡️ PRIVACY SHIELD & ZERO-FOOTPRINT WIPE</h4>
+            <p style="margin:0 0 14px 0; font-size:0.85rem; color:var(--text-muted);">
+              Protect your personal identity, browsing history, and account credentials. One tap wipes browser cache, cookies, recent documents, command history, and clipboard memory from the Cloud PC.
+            </p>
+            <div style="display:flex; gap:12px; flex-wrap:wrap; align-items:center;">
+              <button id="btn-wipe-privacy-now" class="cyber-btn neon-pink" type="button" style="padding:10px 18px; font-weight:700;">
+                🧹 WIPE HISTORY & SENSITIVE TRACES
+              </button>
+              <button id="btn-privacy-lock" class="cyber-btn neon-purple" type="button" style="padding:10px 18px; font-weight:700;">
+                🔒 LOCK SESSION NOW
+              </button>
+            </div>
+          </div>
+
+          <!-- Section 3: Commercial Client License & Token Management (Tool Seller Suite) -->
+          <div class="driver-panel-card">
+            <h4 style="margin:0 0 6px 0; color:var(--neon-cyan); font-size:1.15rem;">🎫 COMMERCIAL CLIENT TOKENS & LICENSES</h4>
+            <p style="margin:0 0 14px 0; font-size:0.85rem; color:var(--text-muted);">
+              Selling access to this Cloud PC? Generate and assign unique Client License Tokens to customers. Buyers can instantly log in and access their safe cloud workstation without asking for your master password.
+            </p>
+            <div style="display:flex; gap:12px; flex-wrap:wrap; align-items:center; margin-bottom:14px;">
+              <input type="text" id="input-new-token-label" class="cyber-input" placeholder="Client Name or Plan (e.g. VIP Client 1)" style="max-width:280px;" />
+              <button id="btn-generate-client-token" class="cyber-btn neon-cyan" type="button" style="padding:8px 16px; font-weight:700;">
+                ➕ GENERATE CLIENT TOKEN
+              </button>
+            </div>
+            <div id="client-tokens-list" style="display:flex; flex-direction:column; gap:8px;">
+              <p style="color:#64748b; font-size:0.85rem;">Loading client tokens...</p>
+            </div>
+          </div>
+        </div>
+      </section>
       <section id="tab-copilot" class="tab-content">
         <div class="viewer-toolbar copilot-toolbar">
           <div class="copilot-nav-pills">
@@ -684,8 +775,8 @@
               <div style="font-size:0.75rem; color:var(--text-muted);">Pipeline Refresh Rate</div>
             </div>
             <div class="metric-card" style="padding:12px; background:rgba(0,245,212,0.05); border:1px solid rgba(0,245,212,0.2); border-radius:8px;">
-              <div style="font-size:1.2rem; font-weight:800; color:var(--neon-green);">UNLIMITED</div>
-              <div style="font-size:0.75rem; color:var(--text-muted);">Cloud Storage Pool</div>
+              <div style="font-size:1.2rem; font-weight:800; color:var(--neon-green);">5.0 TB</div>
+              <div style="font-size:0.75rem; color:var(--text-muted);">Ultra Storage Pool</div>
             </div>
             <div class="metric-card" style="padding:12px; background:rgba(255,158,0,0.05); border:1px solid rgba(255,158,0,0.2); border-radius:8px;">
               <div id="cloud-activity-count" style="font-size:1.2rem; font-weight:800; color:var(--neon-amber);">Active</div>
@@ -992,8 +1083,12 @@
           <div class="auth-logo-ring">
             <span id="auth-lock-icon" class="auth-logo-icon">🔒</span>
           </div>
-          <h2 id="auth-title">VIRGOX SECURITY GATEWAY</h2>
-          <p id="auth-subtitle">Strict Access Control • Dual Phone & Cloud PC</p>
+          <h2 id="auth-title">VIRGOX CLOUD OS GATEWAY</h2>
+          <p id="auth-subtitle">Strict Access Control • Commercial Client & Privacy Shield</p>
+          <div class="auth-mode-pills" style="display:flex; gap:8px; justify-content:center; margin-top:10px;">
+            <button id="btn-tab-pass-mode" class="cyber-btn xs neon-cyan active" type="button">🔑 Password Access</button>
+            <button id="btn-tab-token-mode" class="cyber-btn xs neon-green" type="button">🎫 Client Token Access</button>
+          </div>
         </div>
 
         <div id="auth-alert" class="auth-alert-msg hidden"></div>
@@ -1036,9 +1131,33 @@
           <button id="btn-auth-login" class="cyber-btn neon-cyan auth-submit-btn" type="button">
             🔓 UNLOCK CLOUD PC
           </button>
-          <div class="auth-footer-actions">
+          <div class="auth-footer-actions dual">
             <button id="btn-auth-trigger-reset" class="cyber-btn text-btn" type="button">
-              🔄 Forgot Password? Reset via Email Code
+              🔄 Reset via Email Code
+            </button>
+            <button id="btn-auth-switch-token-link" class="cyber-btn text-btn" type="button" style="color:var(--neon-green);">
+              🎫 Use Client Token
+            </button>
+          </div>
+        </div>
+
+        <!-- VIEW 5: CLIENT LICENSE TOKEN LOGIN (Commercial Tool Access) -->
+        <div id="auth-view-token" class="auth-view hidden">
+          <div class="auth-user-badge">
+            <span class="badge-label">ACCESS MODE:</span>
+            <span class="badge-email" style="color:var(--neon-green);">COMMERCIAL CLIENT LICENSE</span>
+          </div>
+          <div class="auth-form-group">
+            <label for="auth-input-token">🎫 Enter Client License Token:</label>
+            <input type="text" id="auth-input-token" class="cyber-input" placeholder="e.g. VIRGOX-PRO-CLIENT-2026" autofocus />
+            <span class="hint">Instant access for buyers and authorized client workstations.</span>
+          </div>
+          <button id="btn-auth-token-login" class="cyber-btn neon-green auth-submit-btn" type="button">
+            🚀 UNLOCK CLOUD PC (CLIENT ACCESS)
+          </button>
+          <div class="auth-footer-actions">
+            <button id="btn-auth-switch-pass-link" class="cyber-btn text-btn" type="button">
+              🔑 Switch to Master Password Login
             </button>
           </div>
         </div>

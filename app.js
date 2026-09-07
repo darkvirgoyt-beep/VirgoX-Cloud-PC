@@ -148,6 +148,7 @@
     setupInstalledAppsDrawer();
     setupNetworkControl();
     setupExternalKeyboard();
+    setupBackupAndPrivacy();
   }
 
   // Frame Security Controllers: STRICT zero-trust isolation
@@ -268,6 +269,8 @@
       }
     } else if (targetTab === 'installed') {
       if (window.loadInstalledApps) window.loadInstalledApps();
+    } else if (targetTab === 'backup') {
+      if (window.loadBackupAndPrivacy) window.loadBackupAndPrivacy();
     } else {
       // Launcher / Deck tab: unload split frames
       if (splitDesktopFrame && splitDesktopFrame.src !== 'about:blank') {
@@ -1958,6 +1961,7 @@
     const viewLogin = document.getElementById('auth-view-login');
     const viewOtp = document.getElementById('auth-view-otp');
     const viewNewpass = document.getElementById('auth-view-newpass');
+    const viewToken = document.getElementById('auth-view-token');
 
     // Inputs
     const inputSetupEmail = document.getElementById('auth-setup-email');
@@ -1966,6 +1970,7 @@
     const inputSetupConfirm = document.getElementById('auth-setup-pass-confirm');
 
     const inputLoginPass = document.getElementById('auth-login-pass');
+    const inputToken = document.getElementById('auth-input-token');
 
     const inputResetOtp = document.getElementById('auth-input-otp');
     const inputNewPass = document.getElementById('auth-input-new-pass');
@@ -1975,10 +1980,15 @@
     const displayEmail = document.getElementById('auth-display-email');
     const otpTargetEmail = document.getElementById('auth-otp-target-email');
 
-    // Buttons
+    // Buttons & Navigation
     const btnSendSetupCode = document.getElementById('btn-auth-send-setup-code');
     const btnConfirmSetup = document.getElementById('btn-auth-confirm-setup');
     const btnLogin = document.getElementById('btn-auth-login');
+    const btnAuthTokenLogin = document.getElementById('btn-auth-token-login');
+    const btnTabPassMode = document.getElementById('btn-tab-pass-mode');
+    const btnTabTokenMode = document.getElementById('btn-tab-token-mode');
+    const btnSwitchTokenLink = document.getElementById('btn-auth-switch-token-link');
+    const btnSwitchPassLink = document.getElementById('btn-auth-switch-pass-link');
     const btnTriggerReset = document.getElementById('btn-auth-trigger-reset');
     const btnVerifyResetOtp = document.getElementById('btn-auth-verify-otp');
     const btnResendResetOtp = document.getElementById('btn-auth-resend-otp');
@@ -2020,7 +2030,7 @@
 
     function switchView(viewName) {
       hideAlert();
-      [viewSetup, viewLogin, viewOtp, viewNewpass].forEach(v => {
+      [viewSetup, viewLogin, viewOtp, viewNewpass, viewToken].forEach(v => {
         if (v) v.classList.add('hidden');
       });
 
@@ -2031,13 +2041,26 @@
         if (viewSetup) viewSetup.classList.remove('hidden');
         setTimeout(() => inputSetupEmail && inputSetupEmail.focus(), 100);
       } else if (viewName === 'login') {
-        if (authTitle) authTitle.textContent = 'VIRGOX CLOUD PC LOCKED';
-        if (authSubtitle) authSubtitle.textContent = 'Strict Protection: Enter your set password to access Cloud PC';
+        if (authTitle) authTitle.textContent = 'VIRGOX CLOUD OS GATEWAY';
+        if (authSubtitle) authSubtitle.textContent = 'Strict Access Control • Commercial Client & Privacy Shield';
         if (authLockIcon) authLockIcon.textContent = '🔒';
         if (viewLogin) viewLogin.classList.remove('hidden');
+        if (btnTabPassMode) btnTabPassMode.classList.add('active');
+        if (btnTabTokenMode) btnTabTokenMode.classList.remove('active');
         if (inputLoginPass) {
           inputLoginPass.value = '';
           setTimeout(() => inputLoginPass.focus(), 100);
+        }
+      } else if (viewName === 'token') {
+        if (authTitle) authTitle.textContent = 'COMMERCIAL CLIENT ACCESS';
+        if (authSubtitle) authSubtitle.textContent = 'Enter your Client License Token to access Cloud PC';
+        if (authLockIcon) authLockIcon.textContent = '🎫';
+        if (viewToken) viewToken.classList.remove('hidden');
+        if (btnTabTokenMode) btnTabTokenMode.classList.add('active');
+        if (btnTabPassMode) btnTabPassMode.classList.remove('active');
+        if (inputToken) {
+          inputToken.value = '';
+          setTimeout(() => inputToken.focus(), 100);
         }
       } else if (viewName === 'otp') {
         if (authTitle) authTitle.textContent = 'PASSWORD RESET VIA EMAIL';
@@ -2384,6 +2407,59 @@
 
     if (btnLogin) {
       btnLogin.addEventListener('click', handleLogin);
+    }
+
+    if (btnTabPassMode) btnTabPassMode.addEventListener('click', () => switchView('login'));
+    if (btnTabTokenMode) btnTabTokenMode.addEventListener('click', () => switchView('token'));
+    if (btnSwitchTokenLink) btnSwitchTokenLink.addEventListener('click', () => switchView('token'));
+    if (btnSwitchPassLink) btnSwitchPassLink.addEventListener('click', () => switchView('login'));
+
+    if (btnAuthTokenLogin) {
+      btnAuthTokenLogin.addEventListener('click', async () => {
+        const token = (inputToken ? inputToken.value : '').trim();
+        if (!token) {
+          showAlert('Please enter your Client License Token.');
+          if (inputToken) inputToken.focus();
+          return;
+        }
+        btnAuthTokenLogin.disabled = true;
+        btnAuthTokenLogin.textContent = '⏳ Verifying token...';
+        try {
+          const url = state.config.bridgeUrl || window.location.origin;
+          const res = await fetch(`${url}/api/auth/token_login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ token })
+          });
+          const data = await res.json();
+          if (res.ok && data.status === 'ok') {
+            sessionStorage.setItem('virgox_authenticated', 'true');
+            sessionStorage.setItem('virgox_client_token', token);
+            showAlert('✓ Client Token verified! Access granted.', 'success');
+            setTimeout(() => {
+              btnAuthTokenLogin.disabled = false;
+              btnAuthTokenLogin.textContent = '🚀 UNLOCK CLOUD PC (CLIENT ACCESS)';
+              unlockPC();
+            }, 300);
+          } else {
+            showAlert('❌ ' + (data.message || 'Invalid Client Token. Please verify with your seller.'));
+            btnAuthTokenLogin.disabled = false;
+            btnAuthTokenLogin.textContent = '🚀 UNLOCK CLOUD PC (CLIENT ACCESS)';
+          }
+        } catch (e) {
+          showAlert('❌ Server error verifying token.');
+          btnAuthTokenLogin.disabled = false;
+          btnAuthTokenLogin.textContent = '🚀 UNLOCK CLOUD PC (CLIENT ACCESS)';
+        }
+      });
+    }
+
+    if (inputToken) {
+      inputToken.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          if (btnAuthTokenLogin) btnAuthTokenLogin.click();
+        }
+      });
     }
 
     // ==========================================
@@ -2935,6 +3011,182 @@
         keepalive: true
       }).catch(() => {});
     });
+  }
+
+  // ==========================================================================
+  // 🛡️ Privacy & Backup Protection Suite (Commercial SaaS Engine)
+  // ==========================================================================
+  window.loadBackupAndPrivacy = async function() {
+    const url = state.config.bridgeUrl || window.location.origin;
+    
+    // 1. Fetch Storage Info
+    try {
+      const res = await fetch(`${url}/api/storage/info`);
+      const data = await res.json();
+      if (data.status === 'ok') {
+        const totalEl = document.getElementById('backup-total-storage');
+        const availEl = document.getElementById('backup-avail-storage');
+        if (totalEl) totalEl.textContent = data.total || '5.0 TB';
+        if (availEl) availEl.textContent = data.available || '4.8 TB';
+      }
+    } catch (e) {}
+
+    // 2. Fetch Backups List
+    loadBackupsList();
+
+    // 3. Fetch Client Tokens List
+    loadClientTokensList();
+  };
+
+  async function loadBackupsList() {
+    const container = document.getElementById('backup-list-container');
+    if (!container) return;
+    try {
+      const url = state.config.bridgeUrl || window.location.origin;
+      const res = await fetch(`${url}/api/user/backups_list`);
+      const data = await res.json();
+      if (data.status === 'ok' && data.backups && data.backups.length > 0) {
+        container.innerHTML = data.backups.map(b => `
+          <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 14px; background:rgba(0,242,254,0.04); border:1px solid rgba(0,242,254,0.2); border-radius:8px;">
+            <div>
+              <div style="font-weight:700; color:#fff; font-size:0.9rem;">📦 ${b.filename}</div>
+              <div style="font-size:0.75rem; color:#94a3b8;">Size: ${b.size_mb} MB • Created: ${b.created_at}</div>
+            </div>
+            <div style="display:flex; gap:8px;">
+              <a href="${url}/api/user/download_backup?filename=${b.filename}" class="cyber-btn xs neon-cyan" download style="text-decoration:none; display:inline-flex; align-items:center;">
+                📥 DOWNLOAD
+              </a>
+            </div>
+          </div>
+        `).join('');
+      } else {
+        container.innerHTML = '<p style="color:#64748b; font-size:0.85rem;">No backup archives found yet. Tap "Create New Backup Archive" above to protect your data.</p>';
+      }
+    } catch (e) {
+      container.innerHTML = '<p style="color:#ef4444; font-size:0.85rem;">Could not load backup archives list.</p>';
+    }
+  }
+
+  async function loadClientTokensList() {
+    const listEl = document.getElementById('client-tokens-list');
+    if (!listEl) return;
+    try {
+      const url = state.config.bridgeUrl || window.location.origin;
+      const res = await fetch(`${url}/api/auth/list_client_tokens`);
+      const data = await res.json();
+      if (data.status === 'ok' && data.tokens && data.tokens.length > 0) {
+        listEl.innerHTML = data.tokens.map(t => `
+          <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 14px; background:rgba(0,255,136,0.04); border:1px solid rgba(0,255,136,0.25); border-radius:8px;">
+            <div>
+              <div style="font-family:monospace; font-weight:700; color:var(--neon-green); font-size:0.95rem;">🎫 ${t.token}</div>
+              <div style="font-size:0.75rem; color:#94a3b8;">${t.label || 'Client License'} • ${t.created_at || 'Active'}</div>
+            </div>
+            <button class="cyber-btn xs neon-cyan" onclick="navigator.clipboard.writeText('${t.token}').then(() => alert('Copied token: ${t.token}'))">
+              📋 COPY TOKEN
+            </button>
+          </div>
+        `).join('');
+      } else {
+        listEl.innerHTML = '<p style="color:#64748b; font-size:0.85rem;">No client tokens generated yet.</p>';
+      }
+    } catch (e) {
+      listEl.innerHTML = '<p style="color:#64748b; font-size:0.85rem;">Could not load client tokens.</p>';
+    }
+  }
+
+  function setupBackupAndPrivacy() {
+    const btnCreateBackup = document.getElementById('btn-create-backup-now');
+    const btnQuickBackup = document.getElementById('btn-quick-backup');
+    const btnWipePrivacy = document.getElementById('btn-wipe-privacy-now');
+    const btnQuickPrivacy = document.getElementById('btn-quick-privacy');
+    const btnPrivacyLock = document.getElementById('btn-privacy-lock');
+    const btnLockSession = document.getElementById('btn-lock-session');
+    const btnGenToken = document.getElementById('btn-generate-client-token');
+    const inputTokenLabel = document.getElementById('input-new-token-label');
+    const backupStatusMsg = document.getElementById('backup-status-msg');
+
+    async function triggerBackup() {
+      const btn = btnCreateBackup || btnQuickBackup;
+      if (btn) { btn.disabled = true; btn.textContent = '⏳ Creating Backup...'; }
+      if (backupStatusMsg) backupStatusMsg.textContent = '⏳ Compressing files & creating snapshot...';
+      try {
+        const url = state.config.bridgeUrl || window.location.origin;
+        const res = await fetch(`${url}/api/user/backup`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ label: 'Manual Snapshot' })
+        });
+        const data = await res.json();
+        if (res.ok && data.status === 'ok') {
+          if (backupStatusMsg) backupStatusMsg.textContent = `✓ Created: ${data.filename} (${data.size_mb} MB)`;
+          alert(`✅ Backup Created Successfully!\nFile: ${data.filename} (${data.size_mb} MB)`);
+          loadBackupsList();
+        } else {
+          if (backupStatusMsg) backupStatusMsg.textContent = '❌ Failed to create backup.';
+        }
+      } catch (e) {
+        if (backupStatusMsg) backupStatusMsg.textContent = '❌ Network error during backup.';
+      } finally {
+        if (btn) { btn.disabled = false; btn.textContent = '💾 CREATE NEW BACKUP ARCHIVE'; }
+      }
+    }
+
+    async function triggerPrivacyWipe() {
+      if (!confirm('⚠️ Activate Privacy Shield?\n\nThis will permanently wipe browser cache, cookies, recent document history, and shell logs to protect your privacy.')) return;
+      try {
+        const url = state.config.bridgeUrl || window.location.origin;
+        const res = await fetch(`${url}/api/user/privacy_clean`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' }
+        });
+        const data = await res.json();
+        alert(data.message || '🛡️ Privacy Shield activated! All traces wiped.');
+      } catch (e) {
+        alert('Could not complete privacy wipe.');
+      }
+    }
+
+    function triggerLock() {
+      sessionStorage.removeItem('virgox_authenticated');
+      sessionStorage.removeItem('virgox_client_token');
+      location.reload();
+    }
+
+    if (btnCreateBackup) btnCreateBackup.addEventListener('click', triggerBackup);
+    if (btnQuickBackup) btnQuickBackup.addEventListener('click', triggerBackup);
+    if (btnWipePrivacy) btnWipePrivacy.addEventListener('click', triggerPrivacyWipe);
+    if (btnQuickPrivacy) btnQuickPrivacy.addEventListener('click', triggerPrivacyWipe);
+    if (btnPrivacyLock) btnPrivacyLock.addEventListener('click', triggerLock);
+    if (btnLockSession) btnLockSession.addEventListener('click', triggerLock);
+
+    if (btnGenToken) {
+      btnGenToken.addEventListener('click', async () => {
+        const label = (inputTokenLabel ? inputTokenLabel.value : '').trim() || 'Commercial Client Key';
+        btnGenToken.disabled = true;
+        btnGenToken.textContent = '⏳ Generating...';
+        try {
+          const url = state.config.bridgeUrl || window.location.origin;
+          const res = await fetch(`${url}/api/auth/generate_client_token`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ label })
+          });
+          const data = await res.json();
+          if (res.ok && data.status === 'ok') {
+            if (inputTokenLabel) inputTokenLabel.value = '';
+            alert(`🎉 Client License Token Generated!\n\nToken: ${data.token_entry.token}\nLabel: ${data.token_entry.label}\n\nGive this token to your buyer to access the PC.`);
+            loadClientTokensList();
+          }
+        } catch (e) {
+          alert('Could not generate client token.');
+        } finally {
+          btnGenToken.disabled = false;
+          btnGenToken.textContent = '➕ GENERATE CLIENT TOKEN';
+        }
+      });
+    }
+
+    window.loadBackupAndPrivacy();
   }
 
   window.addEventListener('DOMContentLoaded', init);
