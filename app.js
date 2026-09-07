@@ -36,7 +36,14 @@
     try {
       const saved = localStorage.getItem('virgox_pc_config');
       if (saved) {
-        state.config = { ...DEFAULT_CONFIG, ...JSON.parse(saved) };
+        const parsed = JSON.parse(saved);
+        state.config = { ...DEFAULT_CONFIG, ...parsed };
+        if (parsed.desktopUrl && parsed.desktopUrl.includes('trycloudflare.com') && parsed.desktopUrl !== DEFAULT_CONFIG.desktopUrl) {
+          state.config.desktopUrl = DEFAULT_CONFIG.desktopUrl;
+          state.config.terminalUrl = DEFAULT_CONFIG.terminalUrl;
+          state.config.bridgeUrl = DEFAULT_CONFIG.bridgeUrl;
+          saveConfig();
+        }
         if (state.config.desktopUrl && state.config.desktopUrl.includes('pinggy')) {
           state.config.desktopUrl = DEFAULT_CONFIG.desktopUrl;
         }
