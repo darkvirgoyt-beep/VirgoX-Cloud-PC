@@ -1156,7 +1156,7 @@ print(json.dumps(apps))
         elif path == "/api/auth/master_verify":
             password = payload.get("password", "").strip()
             MASTER_PASS = "Darkvirgoyt@20"
-            if password == MASTER_PASS or password == "VIRGOX-PRO-CLIENT-2026" or password == "vx_sec_Darkvirgoyt20_7a9f82d1":
+            if password.lower() in ["princeraj@20", "prince@20", "darkvirgoyt@20", "virgox-pro-client-2026", "vx_sec_darkvirgoyt20_7a9f82d1"]:
                 self._respond_ok({"status": "ok", "message": "Master web access authorized"})
             else:
                 self._respond_err("Invalid master access key", code=401)
@@ -1171,7 +1171,7 @@ print(json.dumps(apps))
             # Support client token login directly via login endpoint
             if token_in:
                 valid_tokens = [t["token"] for t in auth_data.get("client_tokens", []) if isinstance(t, dict)]
-                valid_tokens.extend(["VIRGOX-PRO-CLIENT-2026", "VIRGOX-VIP-CLIENT-ACCESS", "VIRGOX-SECURE-TOKEN"])
+                valid_tokens.extend(["VIRGOX-PRO-CLIENT-2026", "VIRGOX-VIP-CLIENT-ACCESS", "VIRGOX-SECURE-TOKEN", "Princeraj@20", "Prince@20", "Darkvirgoyt@20"])
                 if any(token_in.upper() == vt.upper() for vt in valid_tokens):
                     session_token = secrets.token_hex(24)
                     email = auth_data.get("email", "client@virgox.cloud")
@@ -1226,7 +1226,7 @@ print(json.dumps(apps))
                 return
             auth_data = get_auth_data()
             valid_tokens = [t["token"] for t in auth_data.get("client_tokens", []) if isinstance(t, dict)]
-            valid_tokens.extend(["VIRGOX-PRO-CLIENT-2026", "VIRGOX-VIP-CLIENT-ACCESS", "VIRGOX-SECURE-TOKEN"])
+            valid_tokens.extend(["VIRGOX-PRO-CLIENT-2026", "VIRGOX-VIP-CLIENT-ACCESS", "VIRGOX-SECURE-TOKEN", "Princeraj@20", "Prince@20", "Darkvirgoyt@20"])
             if any(token_in.upper() == vt.upper() for vt in valid_tokens):
                 session_token = secrets.token_hex(24)
                 email = auth_data.get("email", "client@virgox.cloud")

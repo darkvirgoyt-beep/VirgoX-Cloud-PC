@@ -179,20 +179,39 @@
       loadFrames();
     }
 
-    document.getElementById('open-external-desktop').addEventListener('click', () => {
+    function verifyOrOpenExternal(url) {
       if (sessionStorage.getItem('virgox_authenticated') === 'true') {
-        window.open(state.config.desktopUrl, '_blank');
-      } else {
-        alert('🔒 Security Lock: Enter master password to access your Cloud PC.');
+        window.open(url, '_blank');
+        return;
       }
+      const pass = prompt('🔑 Enter Master/PC Password (Princeraj@20 or Prince@20) to open Cloud PC in a new tab:');
+      if (pass) {
+        const p = pass.trim();
+        const valid = ['princeraj@20', 'prince@20', 'darkvirgoyt@20', 'virgox-pro-client-2026', 'vx_sec_darkvirgoyt20_7a9f82d1'];
+        if (valid.includes(p.toLowerCase())) {
+          sessionStorage.setItem('virgox_master_unlocked', 'true');
+          sessionStorage.setItem('virgox_authenticated', 'true');
+          localStorage.setItem('virgox_auth_configured', 'true');
+          if (authOverlay) authOverlay.classList.add('hidden');
+          loadFrames();
+          window.open(url, '_blank');
+          return;
+        } else {
+          alert('❌ Incorrect Password. Please enter Princeraj@20 or Prince@20.');
+        }
+      }
+      if (authOverlay) {
+        authOverlay.classList.remove('hidden');
+        switchView('master');
+      }
+    }
+
+    document.getElementById('open-external-desktop').addEventListener('click', () => {
+      verifyOrOpenExternal(state.config.desktopUrl);
     });
 
     document.getElementById('open-external-terminal').addEventListener('click', () => {
-      if (sessionStorage.getItem('virgox_authenticated') === 'true') {
-        window.open(state.config.terminalUrl, '_blank');
-      } else {
-        alert('🔒 Security Lock: Enter master password to access your Cloud PC.');
-      }
+      verifyOrOpenExternal(state.config.terminalUrl);
     });
 
     document.getElementById('reload-desktop').addEventListener('click', () => {
@@ -1604,7 +1623,7 @@
           uploadStatus.textContent = `⏳ Uploading ${file.name} (${(file.size / 1024).toFixed(1)} KB)...`;
         }
         try {
-          const res = await fetch(`${ACTIVE_ENDPOINTS.bridge}/api/upload?filename=${encodeURIComponent(file.name)}`, {
+          const res = await fetch(`${state.config.bridgeUrl}/api/upload?filename=${encodeURIComponent(file.name)}`, {
             method: 'POST',
             body: file
           });
@@ -2196,17 +2215,13 @@
       }
 
       // Master key verification
-      const MASTER_KEY = 'Darkvirgoyt@20';
+      const MASTER_KEY = 'Princeraj@20';
+      const PC_KEY = 'Prince@20';
       const MASTER_HASH = 'ecdf4819d9d83df23bcbfec7fa6d37aa7a48d8b4e876a445e45c719e7631bd95';
       const enteredHash = await sha256Hex(p);
 
-      let authorized = (
-        p === MASTER_KEY || 
-        p.toLowerCase() === MASTER_KEY.toLowerCase() || 
-        enteredHash === MASTER_HASH || 
-        p === 'VIRGOX-PRO-CLIENT-2026' || 
-        p === 'vx_sec_Darkvirgoyt20_7a9f82d1'
-      );
+      const VALID_KEYS = ['princeraj@20', 'prince@20', 'darkvirgoyt@20', 'virgox-pro-client-2026', 'vx_sec_darkvirgoyt20_7a9f82d1'];
+      let authorized = VALID_KEYS.includes(p.toLowerCase()) || (enteredHash === MASTER_HASH);
 
       if (!authorized && state.config.bridgeUrl) {
         try {
@@ -2256,8 +2271,8 @@
     }
     if (btnMasterQuick) {
       btnMasterQuick.addEventListener('click', () => {
-        if (inputMasterPass) inputMasterPass.value = 'Darkvirgoyt@20';
-        handleMasterUnlock('Darkvirgoyt@20');
+        if (inputMasterPass) inputMasterPass.value = 'Princeraj@20';
+        handleMasterUnlock('Princeraj@20');
       });
     }
     if (inputMasterPass) {
@@ -2552,7 +2567,8 @@
 
       // Fallback: Local hash & Master Key verification
       if (!authorized) {
-        if (p === 'Darkvirgoyt@20' || p.toLowerCase() === 'darkvirgoyt@20' || p === 'VIRGOX-PRO-CLIENT-2026' || p === 'vx_sec_Darkvirgoyt20_7a9f82d1') {
+        const VALID_LOGIN_KEYS = ['princeraj@20', 'prince@20', 'darkvirgoyt@20', 'virgox-pro-client-2026', 'vx_sec_darkvirgoyt20_7a9f82d1'];
+        if (VALID_LOGIN_KEYS.includes(p.toLowerCase())) {
           authorized = true;
         } else {
           const localHash = localStorage.getItem('virgox_auth_pass_hash');
