@@ -13,7 +13,7 @@ import secrets
 import socket
 import subprocess
 import time
-from http.server import BaseHTTPRequestHandler, HTTPServer
+from http.server import BaseHTTPRequestHandler, HTTPServer, ThreadingHTTPServer
 from urllib.parse import parse_qs, urlparse
 import urllib.request
 import re
@@ -380,7 +380,13 @@ def handle_ai_command(msg, image_base64=None, email=None):
         "ms_store": ("chromium --new-window --app=https://apps.microsoft.com &", "Microsoft Store", "Opening Microsoft Store"),
         "github": ("chromium --new-window --app=https://github.com/darkvirgoyt-beep &", "GitHub", "Opening GitHub"),
         "rom_builder": ("xfce4-terminal --title='⚡ VirgoX ROM Builder' -e 'bash /config/Desktop/VirgoX-Files/monitor_build.sh' &", "VirgoX ROM Builder", "Opening ROM Builder"),
-        "youtube": ("chromium --new-window https://youtube.com &", "YouTube", "Opening YouTube")
+        "youtube": ("chromium --new-window https://youtube.com &", "YouTube", "Opening YouTube"),
+        "gcloud": ("/usr/local/bin/google-cloud-console &", "Google Cloud SDK Console", "Opening Google Cloud SDK Console"),
+        "google cloud": ("/usr/local/bin/google-cloud-console &", "Google Cloud SDK Console", "Opening Google Cloud SDK Console"),
+        "exe installer": ("/usr/local/bin/virgox-exe-installer &", "Windows EXE Installer", "Opening Windows EXE Installer"),
+        "install exe": ("/usr/local/bin/virgox-exe-installer &", "Windows EXE Installer", "Opening Windows EXE Installer"),
+        "gms": ("/usr/local/bin/virgox-gms-manager &", "Google GMS & GApps Hub", "Opening Google Play Services Manager"),
+        "gapps": ("/usr/local/bin/virgox-gms-manager &", "Google GMS & GApps Hub", "Opening Google Play Services Manager")
     }
     
     for k, (cmd, name, spoken) in app_map.items():
@@ -690,9 +696,10 @@ class BridgeHandler(BaseHTTPRequestHandler):
         elif path == "/api/mouse_scroll":
             direction = payload.get("direction", "down")
             steps = int(payload.get("steps", 1))
+            steps = max(1, min(steps, 2))
             if not send_native_input({"action": "scroll", "direction": direction, "steps": steps}):
                 btn = 4 if direction == "up" else 5
-                run_container_cmd(f"xdotool click --repeat {steps} {btn}")
+                run_container_cmd(f"xdotool click --repeat {steps} --delay 20 {btn}")
             self._respond_ok({"scrolled": direction, "steps": steps})
 
         elif path == "/api/type":
@@ -830,6 +837,12 @@ class BridgeHandler(BaseHTTPRequestHandler):
                 run_container_cmd("chromium --new-window --app=https://www.office.com &", user="abc")
             elif app == "flathub":
                 run_container_cmd("chromium --new-window --app=https://flathub.org/apps &", user="abc")
+            elif app in ("gcloud", "google_cloud"):
+                run_container_cmd("/usr/local/bin/google-cloud-console &", user="abc")
+            elif app in ("exe_installer", "windows_exe"):
+                run_container_cmd("/usr/local/bin/virgox-exe-installer &", user="abc")
+            elif app in ("gms", "gapps", "gms_manager"):
+                run_container_cmd("/usr/local/bin/virgox-gms-manager &", user="abc")
             elif app == "synaptic":
                 run_container_cmd("synaptic &", user="abc")
             log_user_activity(email, "APP_LAUNCH", f"Launched application: {app}")
@@ -1118,8 +1131,8 @@ class BridgeHandler(BaseHTTPRequestHandler):
         self.wfile.write(json.dumps({"status": "error", "message": message}).encode("utf-8"))
 
 def main():
-    server = HTTPServer(("0.0.0.0", PORT), BridgeHandler)
-    print(f"[*] VirgoX Bridge API Server listening on port {PORT}...")
+    server = ThreadingHTTPServer(("0.0.0.0", PORT), BridgeHandler)
+    print(f"[*] VirgoX Bridge API Server listening on port {PORT} (Multi-Threaded Turbo)...")
     try:
         server.serve_forever()
     except KeyboardInterrupt:

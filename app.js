@@ -919,7 +919,7 @@
     });
   }
 
-  // High-performance smooth mouse delta dispatcher (60fps batching)
+  // High-performance smooth mouse delta dispatcher (120fps display batching)
   let pendingDx = 0;
   let pendingDy = 0;
   let isDispatchingDelta = false;
@@ -928,30 +928,45 @@
     pendingDx += dx;
     pendingDy += dy;
     if (!isDispatchingDelta) {
-      dispatchDeltas();
+      isDispatchingDelta = true;
+      if (window.requestAnimationFrame) {
+        window.requestAnimationFrame(dispatchDeltas);
+      } else {
+        setTimeout(dispatchDeltas, 8);
+      }
     }
   }
 
   function dispatchDeltas() {
-    if (Math.abs(pendingDx) < 0.5 && Math.abs(pendingDy) < 0.5) {
+    if (Math.abs(pendingDx) < 0.2 && Math.abs(pendingDy) < 0.2) {
       isDispatchingDelta = false;
       return;
     }
-    isDispatchingDelta = true;
     const sendDx = Math.round(pendingDx);
     const sendDy = Math.round(pendingDy);
     pendingDx -= sendDx;
     pendingDy -= sendDy;
 
-    sendAction('mouse_move', { dx: sendDx, dy: sendDy });
-    setTimeout(dispatchDeltas, 16);
+    if (sendDx !== 0 || sendDy !== 0) {
+      sendAction('mouse_move', { dx: sendDx, dy: sendDy });
+    }
+
+    if (Math.abs(pendingDx) >= 0.2 || Math.abs(pendingDy) >= 0.2) {
+      if (window.requestAnimationFrame) {
+        window.requestAnimationFrame(dispatchDeltas);
+      } else {
+        setTimeout(dispatchDeltas, 8);
+      }
+    } else {
+      isDispatchingDelta = false;
+    }
   }
 
   function sendMouseDelta(dx, dy) {
     queueMouseDelta(dx, dy);
   }
 
-  // Screen as Touchpad Controller (Relative Cursor Navigation & 2-Finger Scroll)
+  // Screen as Touchpad Controller (True Relative Laptop Trackpad, Hold-and-Drag & Slow Smooth Scroll)
   function setupDesktopTrackpadOverlay() {
     const btnToggle = document.getElementById('btn-toggle-screen-trackpad');
     const trackpadStateText = document.getElementById('screen-trackpad-state');
@@ -963,12 +978,21 @@
     const pillTitle = document.getElementById('pill-title');
     const pillSub = document.getElementById('pill-sub');
     const pillBadge = document.getElementById('pill-badge');
+    const frame = document.getElementById('desktop-frame');
+    const wrapper = document.getElementById('desktop-wrapper');
 
     state.isScreenTrackpadActive = true;
 
     function updateTrackpadUI() {
       if (state.isScreenTrackpadActive) {
-        if (overlay) overlay.classList.remove('hidden');
+        if (overlay) {
+          overlay.classList.remove('hidden');
+          overlay.style.pointerEvents = 'auto';
+        }
+        if (frame) {
+          frame.style.pointerEvents = 'none';
+        }
+        if (wrapper) wrapper.classList.add('trackpad-active');
         if (btnToggle) {
           btnToggle.classList.add('active', 'neon-cyan');
           btnToggle.classList.remove('neon-green');
@@ -984,7 +1008,14 @@
           setTimeout(() => badge.classList.add('fade'), 3000);
         }
       } else {
-        if (overlay) overlay.classList.add('hidden');
+        if (overlay) {
+          overlay.classList.add('hidden');
+          overlay.style.pointerEvents = 'none';
+        }
+        if (frame) {
+          frame.style.pointerEvents = 'auto';
+        }
+        if (wrapper) wrapper.classList.remove('trackpad-active');
         if (btnToggle) {
           btnToggle.classList.remove('active', 'neon-cyan');
           btnToggle.classList.add('neon-green');
@@ -1023,6 +1054,7 @@
     let lastTouchX = 0;
     let lastTouchY = 0;
     let touchStartTime = 0;
+    let hasMoved = false;
     let longPressTimer = null;
     let isDragging = false;
 
@@ -1031,8 +1063,11 @@
 
     let twoFingerStartY = 0;
     let twoFingerStartX = 0;
+    let lastTwoFingerY = 0;
     let twoFingerStartTime = 0;
     let hasScrolled = false;
+    let scrollAccumulator = 0;
+    let lastScrollTime = 0;
 
     // Fade badge after 4 seconds
     setTimeout(() => {
@@ -1041,6 +1076,7 @@
 
     overlay.addEventListener('touchstart', (e) => {
       e.preventDefault();
+      e.stopPropagation();
 
       if (e.touches.length === 1) {
         const t = e.touches[0];
@@ -1049,64 +1085,85 @@
         lastTouchX = t.clientX;
         lastTouchY = t.clientY;
         touchStartTime = Date.now();
+        hasMoved = false;
         isDragging = false;
 
-        // Long press (450ms) triggers Drag Mode
+        // Long press (260ms) triggers Hold-and-Drag (mousedown 1)
         if (longPressTimer) clearTimeout(longPressTimer);
         longPressTimer = setTimeout(() => {
           isDragging = true;
           if (dragIndicator) dragIndicator.classList.remove('hidden');
           sendAction('mouse_drag', { state: 'down' });
-          if (navigator.vibrate) navigator.vibrate(40);
-        }, 450);
+          if (navigator.vibrate) navigator.vibrate(35);
+        }, 260);
 
       } else if (e.touches.length === 2) {
-        if (longPressTimer) clearTimeout(longPressTimer);
+        if (longPressTimer) {
+          clearTimeout(longPressTimer);
+          longPressTimer = null;
+        }
         twoFingerStartX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
         twoFingerStartY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+        lastTwoFingerY = twoFingerStartY;
         twoFingerStartTime = Date.now();
+        scrollAccumulator = 0;
         hasScrolled = false;
+        lastScrollTime = 0;
       }
     }, { passive: false });
 
     overlay.addEventListener('touchmove', (e) => {
       e.preventDefault();
+      e.stopPropagation();
 
       if (e.touches.length === 1) {
         const t = e.touches[0];
         const dist = Math.hypot(t.clientX - touchStartX, t.clientY - touchStartY);
 
-        // If moved more than 8px before long press fired, cancel long press
-        if (dist > 8 && longPressTimer && !isDragging) {
+        // Cancel long press if finger moved more than 6px
+        if (dist > 6) {
+          hasMoved = true;
+          if (longPressTimer && !isDragging) {
+            clearTimeout(longPressTimer);
+            longPressTimer = null;
+          }
+        }
+
+        if (hasMoved) {
+          const dx = (t.clientX - lastTouchX) * state.config.sensitivity;
+          const dy = (t.clientY - lastTouchY) * state.config.sensitivity;
+
+          lastTouchX = t.clientX;
+          lastTouchY = t.clientY;
+
+          queueMouseDelta(dx, dy);
+        }
+
+      } else if (e.touches.length === 2) {
+        if (longPressTimer) {
           clearTimeout(longPressTimer);
           longPressTimer = null;
         }
-
-        const dx = (t.clientX - lastTouchX) * state.config.sensitivity;
-        const dy = (t.clientY - lastTouchY) * state.config.sensitivity;
-
-        lastTouchX = t.clientX;
-        lastTouchY = t.clientY;
-
-        queueMouseDelta(dx, dy);
-
-      } else if (e.touches.length === 2) {
-        if (longPressTimer) clearTimeout(longPressTimer);
         const currentY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
-        const deltaY = currentY - twoFingerStartY;
+        const deltaY = currentY - lastTwoFingerY;
+        lastTwoFingerY = currentY;
+        scrollAccumulator += deltaY;
 
-        if (Math.abs(deltaY) > 16) {
+        const now = Date.now();
+        // Slow, smooth, controlled scrolling: 30px accumulator threshold, 80ms throttle
+        if (Math.abs(scrollAccumulator) >= 30 && (now - lastScrollTime > 80)) {
           hasScrolled = true;
-          const direction = deltaY < 0 ? 'up' : 'down';
-          const steps = Math.min(4, Math.max(1, Math.round(Math.abs(deltaY) / 16)));
-          sendAction('mouse_scroll', { direction, steps });
-          twoFingerStartY = currentY;
+          const direction = scrollAccumulator < 0 ? 'up' : 'down';
+          sendAction('mouse_scroll', { direction, steps: 1 });
+          scrollAccumulator = 0;
+          lastScrollTime = now;
         }
       }
     }, { passive: false });
 
     overlay.addEventListener('touchend', (e) => {
       e.preventDefault();
+      e.stopPropagation();
 
       if (longPressTimer) {
         clearTimeout(longPressTimer);
@@ -1125,30 +1182,30 @@
         const duration = now - touchStartTime;
         const totalDist = Math.hypot(lastTouchX - touchStartX, lastTouchY - touchStartY);
 
-        // Tap detected if duration < 280ms and movement < 12px
-        if (duration < 280 && totalDist < 12) {
-          if (now - lastTapTime < 340) {
-            // DOUBLE TAP!
+        // Tap detected if no drag movement occurred (stays at current cursor position X!)
+        if (!hasMoved && duration < 280 && totalDist < 8) {
+          if (now - lastTapTime < 320) {
+            // DOUBLE TAP -> double click at current cursor position X
             if (singleTapTimeout) {
               clearTimeout(singleTapTimeout);
               singleTapTimeout = null;
             }
             sendAction('mouse_click', { button: 1, double: true });
             lastTapTime = 0;
-            if (navigator.vibrate) navigator.vibrate([25, 50, 25]);
+            if (navigator.vibrate) navigator.vibrate([20, 40, 20]);
           } else {
-            // SINGLE TAP
+            // SINGLE TAP -> single click at current cursor position X
             lastTapTime = now;
             singleTapTimeout = setTimeout(() => {
               sendAction('mouse_click', { button: 1 });
               if (navigator.vibrate) navigator.vibrate(20);
-            }, 340);
+            }, 300);
           }
         }
       } else if (e.touches.length === 1 && hasScrolled === false) {
-        // If one finger lifted from a 2-finger tap without scrolling
+        // If one finger lifted from a 2-finger tap without scrolling -> RIGHT CLICK
         if (Date.now() - twoFingerStartTime < 260) {
-          sendAction('mouse_click', { button: 3 }); // RIGHT CLICK!
+          sendAction('mouse_click', { button: 3 });
           if (navigator.vibrate) navigator.vibrate(35);
         }
       }
@@ -1162,6 +1219,46 @@
         sendAction('mouse_drag', { state: 'up' });
       }
     });
+
+    // Also support desktop mouse on overlay when not using pointer lock
+    let isMouseDown = false;
+    let mouseStartX = 0;
+    let mouseStartY = 0;
+    let hasMouseMoved = false;
+
+    overlay.addEventListener('mousedown', (e) => {
+      if (e.button === 0) {
+        isMouseDown = true;
+        mouseStartX = e.clientX;
+        mouseStartY = e.clientY;
+        hasMouseMoved = false;
+      }
+    });
+
+    overlay.addEventListener('mousemove', (e) => {
+      if (isMouseDown) {
+        const dist = Math.hypot(e.clientX - mouseStartX, e.clientY - mouseStartY);
+        if (dist > 5) hasMouseMoved = true;
+        const dx = e.movementX !== undefined ? e.movementX : (e.clientX - mouseStartX);
+        const dy = e.movementY !== undefined ? e.movementY : (e.clientY - mouseStartY);
+        queueMouseDelta(dx * state.config.sensitivity, dy * state.config.sensitivity);
+      }
+    });
+
+    overlay.addEventListener('mouseup', (e) => {
+      if (isMouseDown) {
+        isMouseDown = false;
+        if (!hasMouseMoved) {
+          sendAction('mouse_click', { button: e.button === 2 ? 3 : 1 });
+        }
+      }
+    });
+
+    overlay.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      const direction = e.deltaY > 0 ? 'down' : 'up';
+      sendAction('mouse_scroll', { direction, steps: 1 });
+    }, { passive: false });
 
     updateTrackpadUI();
   }

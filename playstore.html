@@ -219,6 +219,7 @@
     <div class="ps-gapps-pill" id="gapps-status">
       <span>⚡ GApps Subsystem: ACTIVE</span>
       <button class="cyber-btn sm neon-green" onclick="syncGApps()" style="padding:4px 8px; font-size:0.75rem;">SYNC GAPPS</button>
+      <button class="cyber-btn sm neon-purple" onclick="openGmsManager()" style="padding:4px 8px; font-size:0.75rem;">⚡ GMS SUITE</button>
     </div>
   </header>
 
@@ -534,6 +535,15 @@
         body: JSON.stringify({ app: 'files' })
       });
       showToast('📂 Opened Downloads folder on Cloud PC desktop.');
+    }
+
+    function openGmsManager() {
+      fetch('/api/launch', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ app: 'gms' })
+      });
+      showToast('⚡ Opened Google GMS & GApps Manager on Cloud PC desktop.');
     }
 
     initPopular();

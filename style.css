@@ -263,16 +263,26 @@ html, body {
   left: 0;
   width: 100%;
   height: 100%;
-  z-index: 60;
+  z-index: 100;
   touch-action: none;
   user-select: none;
   -webkit-user-select: none;
   background: transparent;
-  cursor: default;
+  cursor: grab;
+  pointer-events: auto;
+}
+
+.screen-touchpad-overlay:active {
+  cursor: grabbing;
 }
 
 .screen-touchpad-overlay.hidden {
   display: none !important;
+  pointer-events: none !important;
+}
+
+.screen-wrapper.trackpad-active #desktop-frame {
+  pointer-events: none !important;
 }
 
 .touchpad-hint-badge {
@@ -1023,7 +1033,7 @@ html, body {
   justify-content: center;
   box-shadow: 0 0 18px rgba(0, 229, 255, 0.5);
   cursor: pointer;
-  z-index: 95;
+  z-index: 150;
   transition: all 0.2s ease;
   user-select: none;
   -webkit-tap-highlight-color: transparent;
@@ -1213,7 +1223,7 @@ html, body {
   position: absolute;
   bottom: 60px;
   right: 14px;
-  z-index: 55;
+  z-index: 150;
   pointer-events: auto;
 }
 
