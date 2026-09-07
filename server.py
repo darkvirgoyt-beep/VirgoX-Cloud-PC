@@ -31,6 +31,7 @@ def run_container_cmd(cmd, user="abc"):
         res = subprocess.run(full_cmd, shell=True, capture_output=True, text=True, timeout=5)
         return res.returncode, res.stdout, res.stderr
     except Exception as e:
+        return -1, "", str(e)
 
 def get_memory_data():
     mem_path = "/home/darkvirgoyt/virgox_memory.json"
