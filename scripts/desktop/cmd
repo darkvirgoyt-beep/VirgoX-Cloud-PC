@@ -6,12 +6,18 @@
 export DISPLAY="${DISPLAY:-:1}"
 export WINEPREFIX="${WINEPREFIX:-/config/.wine}"
 
-if [ -n "$1" ]; then
-    wine cmd.exe /c "$@"
+if which wine >/dev/null 2>&1 && [ -f /config/.wine/system.reg ]; then
+    CMD_BIN="wine cmd.exe"
 else
-    xfce4-terminal --title="Command Prompt (Administrator)" \
+    CMD_BIN="/usr/local/bin/virgox-cmd"
+fi
+
+if [ -n "$1" ]; then
+    $CMD_BIN "$@"
+else
+    xfce4-terminal --title="Command Prompt" \
       --color-bg="#0c0c0c" \
       --color-text="#cccccc" \
       --geometry=105x28 \
-      -e "wine cmd.exe"
+      -e "$CMD_BIN"
 fi
