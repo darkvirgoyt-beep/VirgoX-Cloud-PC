@@ -8,9 +8,9 @@
 
   // Default Configuration
   const DEFAULT_CONFIG = {
-    desktopUrl: 'https://lemon-totally-shuttle-greensboro.trycloudflare.com',
-    terminalUrl: 'https://london-extra-right-translated.trycloudflare.com',
-    bridgeUrl: 'https://naturally-supply-once-groove.trycloudflare.com',
+    desktopUrl: 'https://wagner-delete-anchor-repairs.trycloudflare.com',
+    terminalUrl: 'https://suggestions-innovation-elementary-incidence.trycloudflare.com',
+    bridgeUrl: 'https://evaluating-twin-county-meditation.trycloudflare.com',
     sensitivity: 1.5,
     crosshairEnabled: false,
     ecoMode: true
