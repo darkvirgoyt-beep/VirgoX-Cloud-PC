@@ -72,6 +72,20 @@ echo "[*] Bridge API Server started on port 8888."
 echo "[*] Establishing live public tunnels for multi-device access..."
 bash "$DIR/scripts/start_tunnels.sh"
 
+# 8. Deploy Desktop Shortcuts & Custom Icons
+echo "[*] Deploying desktop shortcuts, icons, and native input daemon..."
+docker exec virgox-desktop mkdir -p /usr/share/icons/virgox
+docker cp "$DIR/assets/icons/." virgox-desktop:/usr/share/icons/virgox/
+docker cp "$DIR/desktop-shortcuts/." virgox-desktop:/config/Desktop/
+docker cp "$DIR/desktop-shortcuts/." virgox-desktop:/usr/share/applications/
+docker cp "$DIR/scripts/desktop/." virgox-desktop:/usr/local/bin/
+docker exec virgox-desktop bash -c '
+  chmod +x /usr/local/bin/*
+  chmod +x /config/Desktop/*.desktop
+  chown -R abc:abc /config/Desktop
+  su - abc -c "DISPLAY=:1 /usr/local/bin/virgox-input-daemon.py 2>/dev/null || true"
+'
+
 echo "=============================================================================="
 echo "[SUCCESS] VirgoX Cloud Computer is online and ready!"
 echo "=============================================================================="

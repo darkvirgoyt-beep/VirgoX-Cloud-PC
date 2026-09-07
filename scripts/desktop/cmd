@@ -1,0 +1,17 @@
+#!/bin/bash
+# ==============================================================================
+# ⚡ VirgoX Windows Command Prompt (CMD) Launcher
+# Developer: Prince · VirgoYT (@darkvirgoyt-beep)
+# ==============================================================================
+export DISPLAY="${DISPLAY:-:1}"
+export WINEPREFIX="${WINEPREFIX:-/config/.wine}"
+
+if [ -n "$1" ]; then
+    wine cmd.exe /c "$@"
+else
+    xfce4-terminal --title="Command Prompt (Administrator)" \
+      --color-bg="#0c0c0c" \
+      --color-text="#cccccc" \
+      --geometry=105x28 \
+      -e "wine cmd.exe"
+fi
