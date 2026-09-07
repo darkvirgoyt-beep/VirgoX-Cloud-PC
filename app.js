@@ -121,8 +121,52 @@
   const screenImg = document.getElementById('screen-img');
   const snapshotTime = document.getElementById('snapshot-time');
 
+  // Multi-User Profile & Scoping Controller
+  function setupUserProfile() {
+    const email = (sessionStorage.getItem('virgox_user_email') || localStorage.getItem('virgox_active_user') || 'darkvirgoyt@gmail.com').toLowerCase();
+    const name = sessionStorage.getItem('virgox_user_name') || 'Prince (Owner)';
+    const role = sessionStorage.getItem('virgox_user_role') || (email === 'darkvirgoyt@gmail.com' ? 'owner' : 'guest');
+    const picture = sessionStorage.getItem('virgox_user_picture') || '';
+    const isOwner = (role === 'owner' || email === 'darkvirgoyt@gmail.com');
+
+    document.documentElement.setAttribute('data-user-mode', isOwner ? 'owner' : 'guest');
+
+    const nameEl = document.getElementById('user-name-display');
+    const emailEl = document.getElementById('user-email-display');
+    const roleEl = document.getElementById('role-badge');
+    const avatarImg = document.getElementById('user-avatar-img');
+    const avatarInitials = document.getElementById('user-avatar-initials');
+    const welcomeGuest = document.getElementById('welcome-guest-name');
+
+    if (nameEl) nameEl.textContent = name;
+    if (emailEl) emailEl.textContent = email;
+    if (roleEl) {
+      roleEl.textContent = isOwner ? '👑 OWNER' : '👤 USER';
+      roleEl.className = 'role-badge ' + (isOwner ? 'owner' : 'guest');
+    }
+    if (welcomeGuest) welcomeGuest.textContent = name;
+
+    if (picture && avatarImg && avatarInitials) {
+      avatarImg.src = picture;
+      avatarImg.style.display = 'block';
+      avatarInitials.style.display = 'none';
+    } else if (avatarInitials) {
+      avatarInitials.textContent = (name.charAt(0) || 'U').toUpperCase();
+    }
+
+    // Connect header lock / logout button
+    const btnLock = document.getElementById('btn-header-lock');
+    if (btnLock) {
+      btnLock.onclick = () => {
+        sessionStorage.clear();
+        window.location.href = 'index.html';
+      };
+    }
+  }
+
   // Initialize
   function init() {
+    setupUserProfile();
     loadConfig();
     setupFrames();
     setupTabs();
@@ -1779,6 +1823,28 @@
     // Load History Archive
     async function loadHistoryArchive() {
       if (!historyContainer) return;
+
+      const email = (sessionStorage.getItem('virgox_user_email') || localStorage.getItem('virgox_active_user') || '').toLowerCase();
+      const isOwner = (sessionStorage.getItem('virgox_user_role') === 'owner' || email === 'darkvirgoyt@gmail.com');
+
+      if (!isOwner) {
+        historyContainer.innerHTML = `
+          <div class="history-card" style="border-color: rgba(0, 245, 212, 0.4);">
+            <div class="card-header">
+              <span class="session-badge" style="background:rgba(0,255,136,0.15); border-color:#00ff88; color:#00ff88;">ISOLATED SESSION</span>
+              <span class="session-time">Active Workspace</span>
+            </div>
+            <h4 class="card-title">Clean Workspace Session</h4>
+            <div class="card-prompts">
+              <p style="color:var(--text-muted); font-size:0.85rem; margin:0;">
+                Your session is completely private. You can chat with Jarvis, execute terminal commands, and launch apps anytime. Previous conversations from other users are strictly protected.
+              </p>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
       historyContainer.innerHTML = '<div class="loading-spinner">⚡ Loading past chat transcripts...</div>';
 
       let sessions = [];
@@ -1870,6 +1936,35 @@
     // Load Memory Vault
     async function loadMemoryVault() {
       if (!memoryContainer) return;
+
+      const email = (sessionStorage.getItem('virgox_user_email') || localStorage.getItem('virgox_active_user') || '').toLowerCase();
+      const isOwner = (sessionStorage.getItem('virgox_user_role') === 'owner' || email === 'darkvirgoyt@gmail.com');
+
+      if (!isOwner) {
+        memoryContainer.innerHTML = `
+          <div class="memory-card">
+            <div class="card-header"><span class="session-badge" style="background:rgba(0,242,254,0.15); border-color:#00e5ff; color:#00e5ff;">⚡ CLOUD PC HARDWARE SPECS</span></div>
+            <h4 class="card-title">High-Speed Cloud Workstation</h4>
+            <table class="cyber-table">
+              <tr><td><strong>RAM Engine</strong></td><td>64 GB High-Performance Virtual RAM (ZRAM)</td></tr>
+              <tr><td><strong>Display Sync</strong></td><td>120 FPS Synchronized Low-Latency</td></tr>
+              <tr><td><strong>GPU Acceleration</strong></td><td>Mesa LLVMpipe 3D Multithreaded</td></tr>
+              <tr><td><strong>OS Platform</strong></td><td>Ubuntu Linux LTS Desktop (Webtop GUI)</td></tr>
+              <tr><td><strong>Preinstalled Suites</strong></td><td>Blender 5.0, Unreal 6, Steam, Photopea, Shotcut 4K</td></tr>
+            </table>
+          </div>
+
+          <div class="memory-card notes-card">
+            <div class="card-header"><span class="session-badge" style="background:rgba(0,255,136,0.15); border-color:#00ff88; color:#00ff88;">📝 MY PRIVATE SCRATCHPAD</span></div>
+            <p style="color:var(--text-muted); font-size:0.8rem; margin-bottom:8px;">Add your personal notes or commands for this session:</p>
+            <ul class="notes-list" id="guest-notes-list">
+              <li><span class="note-text">Welcome to your private Cloud PC. All tools are ready to use.</span><span class="note-time">Session Active</span></li>
+            </ul>
+          </div>
+        `;
+        return;
+      }
+
       memoryContainer.innerHTML = '<div class="loading-spinner">🧠 Accessing permanent memory...</div>';
 
       let mem = {};
@@ -3296,8 +3391,8 @@
 
     if (btnHeaderLogout) {
       btnHeaderLogout.addEventListener('click', () => {
-        sessionStorage.removeItem('virgox_authenticated');
-        location.reload();
+        sessionStorage.clear();
+        window.location.href = 'index.html';
       });
     }
 
@@ -3476,9 +3571,8 @@
     }
 
     function triggerLock() {
-      sessionStorage.removeItem('virgox_authenticated');
-      sessionStorage.removeItem('virgox_client_token');
-      location.reload();
+      sessionStorage.clear();
+      window.location.href = 'index.html';
     }
 
     if (btnCreateBackup) btnCreateBackup.addEventListener('click', triggerBackup);

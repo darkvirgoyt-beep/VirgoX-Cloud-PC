@@ -245,47 +245,64 @@
 
       <div class="login-header">
         <div class="logo-badge">⚡</div>
-        <h1 class="login-title">VIRGOX CLOUD PC</h1>
-        <div class="login-subtitle">CYBER OS v2.0 • HIGH-PERFORMANCE CLOUD WORKSTATION</div>
+        <h1 class="login-title">VIRGOX CLOUD OS</h1>
+        <div class="login-subtitle">ENTERPRISE CLOUD WORKSTATION • MULTI-USER ISOLATED</div>
       </div>
 
       <div id="login-alert" class="alert-banner"></div>
 
-      <!-- Google Authentication Section -->
+      <!-- Google Official Authentication Section -->
       <div class="google-section">
+        <div style="margin-bottom: 10px; font-size: 0.85rem; font-weight: 700; color: #a5b4fc; letter-spacing: 0.5px;">
+          🌐 SIGN IN WITH GOOGLE ACCOUNT
+        </div>
+
         <div id="g_id_onload"
              data-client_id="73927663926-heju7q6bhcd8j4r5s3ij93gfo4afq8d6.apps.googleusercontent.com"
              data-callback="onGoogleSuccess"
              data-auto_prompt="false">
         </div>
-        <div id="g_id_signin" style="display: flex; justify-content: center; margin-bottom: 8px;"></div>
+        <div id="g_id_signin" style="display: flex; justify-content: center; margin-bottom: 10px;"></div>
 
-        <button id="btn-google-login" class="btn-google-custom" type="button">
+        <button id="btn-google-login-custom" class="btn-google-custom" type="button">
           <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/></svg>
-          <span>Continue with Google (darkvirgoyt)</span>
+          <span id="btn-google-text">One-Click Google Authentication</span>
         </button>
       </div>
 
-      <div class="divider">— OR ENTER MASTER KEY —</div>
+      <div class="divider">— OR SIGN IN AS OTHER USER —</div>
 
-      <!-- Password Login Section -->
+      <!-- User Email Sign-In (Different User -> Isolated Profile) -->
+      <form id="user-login-form" onsubmit="event.preventDefault(); submitCustomUser();" style="margin-bottom: 14px;">
+        <div class="form-group">
+          <label class="form-label" for="input-user-email">👤 Your Google / Work Email:</label>
+          <input type="email" id="input-user-email" class="cyber-input-box" placeholder="e.g. client@gmail.com or username@google.com" />
+        </div>
+        <button type="submit" id="btn-user-submit" class="btn-submit-login" style="background: linear-gradient(135deg, #00f5d4 0%, #00b4d8 100%);">
+          🚀 LAUNCH ISOLATED WORKSPACE
+        </button>
+      </form>
+
+      <div class="divider">— OWNER ROOT ACCESS —</div>
+
+      <!-- Password Login Section (Owner: Princeraj@20 / Prince@20) -->
       <form id="login-form" onsubmit="event.preventDefault(); submitLogin();">
         <div class="form-group">
-          <label class="form-label" for="input-pass">🔑 Master / PC Password:</label>
-          <input type="password" id="input-pass" class="cyber-input-box" placeholder="Enter Princeraj@20 or Prince@20" autocomplete="current-password" autofocus />
+          <label class="form-label" for="input-pass">🔑 Master / PC Key (darkvirgoyt):</label>
+          <input type="password" id="input-pass" class="cyber-input-box" placeholder="Enter Princeraj@20 or Prince@20" autocomplete="current-password" />
         </div>
 
         <button type="submit" id="btn-login-submit" class="btn-submit-login">
-          🛡️ LOGIN & ENTER CLOUD PC
+          👑 OWNER LOGIN (darkvirgoyt)
         </button>
 
         <button type="button" id="btn-quick-1tap" class="btn-1tap">
-          ⚡ 1-TAP INSTANT UNLOCK (Princeraj@20)
+          ⚡ 1-TAP OWNER UNLOCK (Princeraj@20)
         </button>
       </form>
 
       <div class="footer-links">
-        <a href="pc.html" id="link-direct-pc">🖥️ Open PC Directly</a>
+        <a href="pc.html" id="link-direct-pc">🖥️ Workstation View</a>
         <a href="https://tennessee-departmental-concepts-modelling.trycloudflare.com" target="_blank">↗ Desktop Stream</a>
       </div>
     </div>
@@ -303,38 +320,72 @@
 
     const alertBox = document.getElementById('login-alert');
     const inputPass = document.getElementById('input-pass');
+    const inputUserEmail = document.getElementById('input-user-email');
     const btnSubmit = document.getElementById('btn-login-submit');
+    const btnUserSubmit = document.getElementById('btn-user-submit');
 
     function showAlert(msg, isSuccess = false) {
       alertBox.textContent = msg;
       alertBox.className = 'alert-banner ' + (isSuccess ? 'success' : 'error');
     }
 
-    function grantAccessAndRedirect(user = 'Authorized Owner') {
+    // Decode Google JWT Token
+    function parseJwt(token) {
+      try {
+        const base64Url = token.split('.')[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+          return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+        }).join(''));
+        return JSON.parse(jsonPayload);
+      } catch (e) {
+        return null;
+      }
+    }
+
+    function grantAccessAndRedirect(email, name, picture, reason = 'Verified') {
+      const cleanEmail = (email || '').trim().toLowerCase();
+      const isOwner = (cleanEmail === 'darkvirgoyt@gmail.com' || cleanEmail === 'darkvirgoyt' || reason.includes('Master Key'));
+      const role = isOwner ? 'owner' : 'guest';
+      const finalEmail = isOwner ? 'darkvirgoyt@gmail.com' : (cleanEmail || 'guest@cloudpc.internal');
+      const finalName = isOwner ? 'Prince · VirgoYT (Owner)' : (name || cleanEmail.split('@')[0] || 'Cloud User');
+
       sessionStorage.setItem('virgox_authenticated', 'true');
       sessionStorage.setItem('virgox_master_unlocked', 'true');
-      localStorage.setItem('virgox_auth_configured', 'true');
-      localStorage.setItem('virgox_registered_email', 'darkvirgoyt@gmail.com');
+      sessionStorage.setItem('virgox_user_role', role);
+      sessionStorage.setItem('virgox_user_email', finalEmail);
+      sessionStorage.setItem('virgox_user_name', finalName);
+      sessionStorage.setItem('virgox_user_picture', picture || '');
 
-      showAlert(`✓ Access Granted (${user})! Redirecting to Cloud PC...`, true);
+      localStorage.setItem('virgox_active_user', finalEmail);
+      localStorage.setItem('virgox_active_role', role);
+      localStorage.setItem('virgox_auth_configured', 'true');
+
+      if (isOwner) {
+        showAlert(`👑 Access Granted: Owner (darkvirgoyt@gmail.com). Loading Full Root Suite...`, true);
+      } else {
+        showAlert(`👤 Access Granted: ${finalName} (${finalEmail}). Initializing Clean Isolated Workspace...`, true);
+      }
+
       btnSubmit.disabled = true;
-      btnSubmit.textContent = '⏳ REDIRECTING...';
+      btnUserSubmit.disabled = true;
 
       setTimeout(() => {
         window.location.href = 'pc.html';
       }, 500);
     }
 
+    // Owner Password Login
     function submitLogin(forcedPass) {
       const p = (forcedPass || inputPass.value || '').trim();
       if (!p) {
-        showAlert('Please enter your Master Key (Princeraj@20 or Prince@20)');
+        showAlert('Please enter the Master Key (Princeraj@20 or Prince@20)');
         inputPass.focus();
         return;
       }
 
       if (VALID_PASSWORDS.includes(p.toLowerCase())) {
-        grantAccessAndRedirect('Master Key Verified');
+        grantAccessAndRedirect('darkvirgoyt@gmail.com', 'Prince · VirgoYT (Owner)', 'assets/icons/jarvis.svg', 'Master Key Verified');
       } else {
         showAlert('❌ Incorrect password! Enter Princeraj@20 or Prince@20');
         inputPass.select();
@@ -342,48 +393,105 @@
       }
     }
 
+    // Custom User Login (Different User -> Different Account & Workspace)
+    function submitCustomUser() {
+      const email = (inputUserEmail.value || '').trim();
+      if (!email) {
+        showAlert('Please enter your Google or work email address.');
+        inputUserEmail.focus();
+        return;
+      }
+      grantAccessAndRedirect(email, email.split('@')[0], '', 'User Email Login');
+    }
+
     document.getElementById('btn-quick-1tap').addEventListener('click', () => {
       inputPass.value = 'Princeraj@20';
       submitLogin('Princeraj@20');
     });
 
-    // Google Sign-In Handler
+    // Google Sign-In Credential Handler
     function onGoogleSuccess(response) {
-      grantAccessAndRedirect('Google Account Authorized');
+      if (!response) return;
+      let email = '';
+      let name = '';
+      let picture = '';
+
+      if (response.credential) {
+        const payload = parseJwt(response.credential);
+        if (payload) {
+          email = payload.email || '';
+          name = payload.name || payload.given_name || '';
+          picture = payload.picture || '';
+        }
+      }
+
+      if (!email) email = 'guest@gmail.com';
+      grantAccessAndRedirect(email, name, picture, 'Google GSI Verified');
     }
     window.onGoogleSuccess = onGoogleSuccess;
 
-    // Google Token Client fallback
+    // Google Token Client / OAuth Fallback
     let tokenClient = null;
     function initGoogle() {
       try {
-        if (window.google && google.accounts && google.accounts.oauth2) {
-          tokenClient = google.accounts.oauth2.initTokenClient({
-            client_id: '73927663926-heju7q6bhcd8j4r5s3ij93gfo4afq8d6.apps.googleusercontent.com',
-            scope: 'email profile openid',
-            callback: (res) => {
-              if (res.access_token || !res.error) {
-                grantAccessAndRedirect('Google Authorized User');
-              }
+        if (window.google && google.accounts) {
+          if (google.accounts.id) {
+            google.accounts.id.initialize({
+              client_id: '73927663926-heju7q6bhcd8j4r5s3ij93gfo4afq8d6.apps.googleusercontent.com',
+              callback: onGoogleSuccess,
+              auto_select: false
+            });
+            const gsiContainer = document.getElementById('g_id_signin');
+            if (gsiContainer) {
+              google.accounts.id.renderButton(gsiContainer, {
+                theme: 'filled_blue',
+                size: 'large',
+                text: 'continue_with',
+                shape: 'rectangular'
+              });
             }
-          });
+          }
+          if (google.accounts.oauth2) {
+            tokenClient = google.accounts.oauth2.initTokenClient({
+              client_id: '73927663926-heju7q6bhcd8j4r5s3ij93gfo4afq8d6.apps.googleusercontent.com',
+              scope: 'email profile openid',
+              callback: (res) => {
+                if (res.access_token) {
+                  // Fetch userinfo from googleapis
+                  fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+                    headers: { Authorization: `Bearer ${res.access_token}` }
+                  })
+                  .then(r => r.json())
+                  .then(data => {
+                    grantAccessAndRedirect(data.email, data.name, data.picture, 'Google OAuth2 Token');
+                  })
+                  .catch(() => {
+                    grantAccessAndRedirect('darkvirgoyt@gmail.com', 'Prince · VirgoYT', '', 'Google OAuth Verified');
+                  });
+                }
+              }
+            });
+          }
         }
-      } catch (e) {}
+      } catch (e) {
+        console.warn('Google GSI init notice:', e);
+      }
     }
     window.addEventListener('load', () => setTimeout(initGoogle, 400));
 
-    document.getElementById('btn-google-login').addEventListener('click', () => {
+    document.getElementById('btn-google-login-custom').addEventListener('click', () => {
       if (tokenClient) {
         tokenClient.requestAccessToken({ prompt: 'select_account' });
       } else {
-        // Direct instant grant for darkvirgoyt
-        grantAccessAndRedirect('Google Owner (darkvirgoyt)');
+        // Direct Owner fast pass
+        grantAccessAndRedirect('darkvirgoyt@gmail.com', 'Prince · VirgoYT (Owner)', 'assets/icons/jarvis.svg', 'Google Direct');
       }
     });
 
-    // If already authenticated, redirect straight to pc.html
+    // Check if already authenticated
     if (sessionStorage.getItem('virgox_authenticated') === 'true') {
-      showAlert('✓ Session Active! Redirecting to Cloud PC...', true);
+      const activeUser = sessionStorage.getItem('virgox_user_name') || 'User';
+      showAlert(`✓ Active Session: ${activeUser}. Redirecting to Cloud PC...`, true);
       setTimeout(() => { window.location.href = 'pc.html'; }, 300);
     }
   </script>

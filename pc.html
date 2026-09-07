@@ -12,9 +12,15 @@
   <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600;700&family=Rajdhani:wght@500;600;700;800&display=swap" rel="stylesheet">
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script>
-    if (sessionStorage.getItem('virgox_authenticated') !== 'true') {
-      window.location.replace('index.html');
-    }
+    (function() {
+      if (sessionStorage.getItem('virgox_authenticated') !== 'true') {
+        window.location.replace('index.html');
+        return;
+      }
+      const email = (sessionStorage.getItem('virgox_user_email') || '').toLowerCase();
+      const role = sessionStorage.getItem('virgox_user_role') || (email === 'darkvirgoyt@gmail.com' ? 'owner' : 'guest');
+      document.documentElement.setAttribute('data-user-mode', role);
+    })();
   </script>
 </head>
 <body>
@@ -26,8 +32,8 @@
       <div class="brand">
         <div class="brand-logo">⚡</div>
         <div class="brand-text">
-          <h1>VIRGOX CLOUD COMPUTER</h1>
-          <span class="version-tag">CYBER OS v2.0 • DUAL PHONE & AI SYNC</span>
+          <h1>VIRGOX CLOUD OS</h1>
+          <span class="version-tag">CYBER OS v2.0 • MULTI-USER CLOUD SUITE</span>
         </div>
       </div>
 
@@ -42,19 +48,28 @@
         </div>
         <div class="indicator-chip online" id="ai-status">
           <span class="dot"></span>
-          <span class="label">AI PAIR ACTIVE</span>
-        </div>
-        <div class="indicator-chip online" id="eco-chip" title="Eco Mode: Low RAM & GPU usage active">
-          <span class="dot" style="background:#00ff66;"></span>
-          <span class="label">ECO RAM ON</span>
+          <span class="label">AI ACTIVE</span>
         </div>
       </div>
 
-      <div class="header-actions">
-        <button id="btn-header-lock" class="cyber-btn sm neon-pink" title="Lock Cloud PC Session">🔒 LOCK</button>
-        <button id="btn-header-keyboard" class="cyber-btn sm neon-cyan" title="Open Phone Keyboard Bridge">⌨️ TYPE</button>
-        <button id="btn-fullscreen" class="cyber-btn sm" title="Toggle Fullscreen">⛶</button>
-        <button id="btn-settings" class="cyber-btn sm neon-cyan" title="Configure URLs & Devices">⚙️</button>
+      <!-- User Profile & Action Strip -->
+      <div class="header-actions" style="display: flex; align-items: center; gap: 8px;">
+        <div class="user-profile-pill" id="user-profile-pill">
+          <div class="user-avatar" id="user-avatar">
+            <img id="user-avatar-img" src="" alt="Avatar" style="display:none;" />
+            <span id="user-avatar-initials">U</span>
+          </div>
+          <div class="user-info-text">
+            <span class="user-name" id="user-name-display">Prince (Owner)</span>
+            <span class="user-email" id="user-email-display">darkvirgoyt@gmail.com</span>
+          </div>
+          <span class="role-badge owner" id="role-badge">👑 OWNER</span>
+        </div>
+
+        <button id="btn-header-lock" class="cyber-btn xs neon-pink" title="Logout or Switch User">🚪 LOGOUT</button>
+        <button id="btn-header-keyboard" class="cyber-btn xs neon-cyan" title="Open Phone Keyboard Bridge">⌨️ TYPE</button>
+        <button id="btn-fullscreen" class="cyber-btn xs" title="Toggle Fullscreen">⛶</button>
+        <button id="btn-settings" class="cyber-btn xs neon-cyan" title="Configure URLs & Devices">⚙️</button>
       </div>
     </header>
 
@@ -273,10 +288,25 @@
         <div class="deck-container">
           <div class="deck-header">
             <h3>🛍️ VIRGOX APPS, GAMES & CLOUD STORE</h3>
-            <p class="subtitle">1000+ FPS High-Performance Engine • 64 GB Virtual RAM • 5.0 TB Ultra Storage</p>
+            <p class="subtitle">1000+ FPS High-Performance Engine • 64 GB Virtual RAM • 120 FPS Sync</p>
           </div>
 
-          
+          <!-- Guest Welcome Hero (Clean & Professional) -->
+          <div class="user-welcome-hero guest-only">
+            <h4>👋 Dedicated Cloud PC Workstation Active</h4>
+            <p>
+              Welcome, <strong id="welcome-guest-name">User</strong>! Your cloud workstation is private and isolated. High-performance software including Blender 5.0, Unreal Engine 6, Steam, Photopea Photoshop Studio, and Shotcut 4K are pre-installed and ready below with 64 GB Virtual RAM and 120 FPS sync.
+            </p>
+          </div>
+
+          <!-- Owner Welcome Hero (Prince · darkvirgoyt) -->
+          <div class="user-welcome-hero owner-only">
+            <h4>👑 System Architect / Owner Suite Active</h4>
+            <p>
+              Welcome back, <strong>Prince (darkvirgoyt@gmail.com)</strong>! Full Root Administrator Access • VirgoX Motorola FogOS ROM Builder & Flasher • 5.0 TB Storage Pool (/dev/loop0) Online.
+            </p>
+          </div>
+
           <!-- Real PC Drivers & System Engine Control Center -->
           <div class="driver-panel-card">
             <div style="display:flex; justify-content:space-between; align-items:center;">
@@ -470,7 +500,8 @@
               <button class="cyber-btn sm neon-cyan" onclick="focusApp('chrome')">FOCUS / LAUNCH</button>
             </div>
 
-            <div class="app-card" id="card-files">
+            <!-- Owner Private Storage (5.0 TB Pool) -->
+            <div class="app-card owner-only" id="card-files">
               <div class="app-icon">📁</div>
               <div class="app-info">
                 <h4>This PC (5.0 TB Ultra Storage Pool)</h4>
@@ -479,7 +510,18 @@
               <button class="cyber-btn sm neon-purple" onclick="focusApp('files')">OPEN FILES</button>
             </div>
 
-            <div class="app-card" id="card-adb">
+            <!-- Guest Isolated Workspace Storage (50 GB) -->
+            <div class="app-card guest-only" id="card-guest-files">
+              <div class="app-icon">📁</div>
+              <div class="app-info">
+                <h4>My Private Workspace Storage</h4>
+                <p>Personal 50 GB Cloud SSD allocated for your projects, renders & downloads.</p>
+              </div>
+              <button class="cyber-btn sm neon-purple" onclick="focusApp('files')">OPEN FILES</button>
+            </div>
+
+            <!-- Owner ADB & Fastboot Tools (Motorola ROM Flashing) -->
+            <div class="app-card owner-only" id="card-adb">
               <div class="app-icon">⚡</div>
               <div class="app-info">
                 <h4>ADB & Fastboot Tools</h4>
@@ -618,8 +660,8 @@
             </div>
           </div>
 
-          <!-- Section 1: PC Data Backup & Download -->
-          <div class="driver-panel-card" style="margin-bottom:20px;">
+          <!-- Section 1: PC Data Backup & Download (Owner Only) -->
+          <div class="driver-panel-card owner-only" style="margin-bottom:20px;">
             <h4 style="margin:0 0 6px 0; color:var(--neon-green); font-size:1.15rem;">📦 1-CLICK CLOUD & LOCAL DATA BACKUP</h4>
             <p style="margin:0 0 16px 0; font-size:0.85rem; color:var(--text-muted);">
               Safely create an encrypted snapshot archive of your desktop files, configurations, projects, and personal data. You can download the archive directly to your mobile phone or PC for offline safety.
@@ -635,6 +677,22 @@
               <div id="backup-list-container" style="display:flex; flex-direction:column; gap:8px; max-height:220px; overflow-y:auto;">
                 <p style="color:#64748b; font-size:0.85rem;">Loading backup archives...</p>
               </div>
+            </div>
+          </div>
+
+          <!-- Guest Workspace Storage & Session (Guest Only) -->
+          <div class="driver-panel-card guest-only" style="margin-bottom:20px;">
+            <h4 style="margin:0 0 6px 0; color:var(--neon-green); font-size:1.15rem;">📁 MY ISOLATED CLOUD WORKSPACE</h4>
+            <p style="margin:0 0 14px 0; font-size:0.85rem; color:var(--text-muted);">
+              Your personal workspace is private and secured. Files you create in Blender, Unreal Engine, Shotcut, or Chrome are kept in your isolated session and never shared with other users.
+            </p>
+            <div style="display:flex; gap:12px; flex-wrap:wrap; align-items:center;">
+              <button class="cyber-btn neon-cyan" onclick="focusApp('files')" type="button" style="padding:10px 18px; font-weight:700;">
+                📂 OPEN MY FILES
+              </button>
+              <button class="cyber-btn neon-pink" onclick="window.location.href='index.html'" type="button" style="padding:10px 18px; font-weight:700;">
+                🚪 LOGOUT / SWITCH USER
+              </button>
             </div>
           </div>
 
@@ -654,8 +712,8 @@
             </div>
           </div>
 
-          <!-- Section 3: Commercial Client License & Token Management (Tool Seller Suite) -->
-          <div class="driver-panel-card">
+          <!-- Section 3: Commercial Client License & Token Management (Owner Only) -->
+          <div class="driver-panel-card owner-only">
             <h4 style="margin:0 0 6px 0; color:var(--neon-cyan); font-size:1.15rem;">🎫 COMMERCIAL CLIENT TOKENS & LICENSES</h4>
             <p style="margin:0 0 14px 0; font-size:0.85rem; color:var(--text-muted);">
               Selling access to this Cloud PC? Generate and assign unique Client License Tokens to customers. Buyers can instantly log in and access their safe cloud workstation without asking for your master password.
