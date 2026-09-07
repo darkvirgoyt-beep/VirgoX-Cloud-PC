@@ -1,0 +1,18 @@
+#!/bin/bash
+# ⚡ VirgoX Unreal Engine 6 Studio & Project Hub
+export DISPLAY="${DISPLAY:-:1}"
+export MESA_GLTHREAD=true
+export vblank_mode=0
+
+notify-send "⚡ Unreal Engine 6" "Initializing Unreal Engine 6 Next-Gen Environment..." -i /usr/share/icons/virgox/unrealengine.svg 2>/dev/null || true
+
+UE_DIR="/config/Desktop/VirgoX-Files/UnrealEngine6"
+mkdir -p "$UE_DIR/Projects" "$UE_DIR/Templates" "$UE_DIR/Builds"
+
+# If local Unreal Engine binary exists, execute it; otherwise open Unreal Engine Portal & Developer Dashboard
+if [ -f "$UE_DIR/Engine/Binaries/Linux/UnrealEditor" ]; then
+    exec "$UE_DIR/Engine/Binaries/Linux/UnrealEditor" "$@"
+else
+    # Launch Unreal Engine Hub in app mode
+    exec google-chrome --app="https://www.unrealengine.com" --no-sandbox --disable-dev-shm-usage --enable-gpu-rasterization --window-size=1280,800 "$@"
+fi

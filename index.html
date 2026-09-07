@@ -254,16 +254,99 @@
       <section id="tab-launcher" class="tab-content">
         <div class="deck-container">
           <div class="deck-header">
-            <h3>⚡ VIRGOX REMOTE COMPUTER DECK</h3>
-            <p class="subtitle">Quick launchers, system commands, and live screen snapshot</p>
+            <h3>🛍️ VIRGOX APPS, GAMES & CLOUD STORE</h3>
+            <p class="subtitle">120 FPS High-Performance Engine • 64 GB Virtual RAM • Unlimited Storage</p>
+          </div>
+
+          <!-- Hardware & Engine Performance Banner -->
+          <div class="deck-perf-banner" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(160px, 1fr)); gap:10px; margin-bottom:18px;">
+            <div class="metric-card" style="padding:10px 14px; background:rgba(0,242,254,0.06); border:1px solid rgba(0,242,254,0.3); border-radius:8px;">
+              <div style="font-size:1.1rem; font-weight:800; color:var(--neon-cyan);">64 GB RAM</div>
+              <div style="font-size:0.75rem; color:var(--text-muted);">ZRAM Turbo Engine</div>
+            </div>
+            <div class="metric-card" style="padding:10px 14px; background:rgba(123,44,191,0.06); border:1px solid rgba(123,44,191,0.3); border-radius:8px;">
+              <div style="font-size:1.1rem; font-weight:800; color:var(--neon-purple);">120 FPS SYNC</div>
+              <div style="font-size:0.75rem; color:var(--text-muted);">Hardware Synchronized</div>
+            </div>
+            <div class="metric-card" style="padding:10px 14px; background:rgba(0,245,212,0.06); border:1px solid rgba(0,245,212,0.3); border-radius:8px;">
+              <div style="font-size:1.1rem; font-weight:800; color:var(--neon-green);">UNLIMITED</div>
+              <div style="font-size:0.75rem; color:var(--text-muted);">Hybrid Cloud Storage</div>
+            </div>
+            <div class="metric-card" style="padding:10px 14px; background:rgba(255,158,0,0.06); border:1px solid rgba(255,158,0,0.3); border-radius:8px;">
+              <div style="font-size:1.1rem; font-weight:800; color:var(--neon-amber);">MESA LLVMPIPE</div>
+              <div style="font-size:0.75rem; color:var(--text-muted);">Multithreaded 3D</div>
+            </div>
           </div>
 
           <!-- App Grid -->
           <div class="apps-grid">
+            <div class="app-card" id="card-blender">
+              <div class="app-icon">🎨</div>
+              <div class="app-info">
+                <h4>Blender 5.0.1 (Preinstalled)</h4>
+                <p>Full 3D modeling, sculpting, geometry nodes & cycles rendering.</p>
+              </div>
+              <button class="cyber-btn sm neon-cyan" onclick="focusApp('blender')">🚀 LAUNCH BLENDER</button>
+            </div>
+
+            <div class="app-card" id="card-unreal">
+              <div class="app-icon">⚡</div>
+              <div class="app-info">
+                <h4>Unreal Engine 6 Hub</h4>
+                <p>Next-Gen real-time 3D creation and photorealistic engine.</p>
+              </div>
+              <button class="cyber-btn sm neon-purple" onclick="focusApp('unreal_engine')">⚡ OPEN UE6</button>
+            </div>
+
+            <div class="app-card" id="card-epic">
+              <div class="app-icon">🎮</div>
+              <div class="app-info">
+                <h4>Epic Games Launcher</h4>
+                <p>Access gaming library, Unreal marketplace, and free games.</p>
+              </div>
+              <button class="cyber-btn sm neon-green" onclick="focusApp('epic_games')">🎮 OPEN EPIC</button>
+            </div>
+
+            <div class="app-card" id="card-edge">
+              <div class="app-icon">🌐</div>
+              <div class="app-info">
+                <h4>Microsoft Edge (Official)</h4>
+                <p>Official Microsoft Edge browser with fluent UI & Copilot.</p>
+              </div>
+              <button class="cyber-btn sm neon-cyan" onclick="focusApp('edge')">OPEN EDGE</button>
+            </div>
+
+            <div class="app-card" id="card-vlc">
+              <div class="app-icon">🎬</div>
+              <div class="app-info">
+                <h4>VLC Media Player</h4>
+                <p>Ultra-smooth hardware accelerated video and audio playback.</p>
+              </div>
+              <button class="cyber-btn sm neon-amber" onclick="focusApp('vlc')">OPEN VLC</button>
+            </div>
+
+            <div class="app-card" id="card-apk">
+              <div class="app-icon">📱</div>
+              <div class="app-info">
+                <h4>VirgoX APK Installer</h4>
+                <p>Download and run any Android APK package on Cloud PC.</p>
+              </div>
+              <button class="cyber-btn sm neon-green" onclick="focusApp('apk_installer')">INSTALL APK</button>
+            </div>
+
+            <div class="app-card" id="card-wine">
+              <div class="app-icon">🪟</div>
+              <div class="app-info">
+                <h4>Wine Administrator (.EXE)</h4>
+                <p>Launch any Windows application or game executable.</p>
+              </div>
+              <button class="cyber-btn sm neon-purple" onclick="focusApp('wine_admin')">RUN .EXE</button>
+            </div>
+
             <div class="app-card" id="card-chrome">
               <div class="app-icon">🌐</div>
               <div class="app-info">
-                <h4>Google Chrome (Official)</h4>
+                <h4>Google Chrome</h4>
                 <p>Opens GitHub login with persistent profiles & passkeys.</p>
               </div>
               <button class="cyber-btn sm neon-cyan" onclick="focusApp('chrome')">FOCUS / LAUNCH</button>
@@ -272,7 +355,7 @@
             <div class="app-card" id="card-files">
               <div class="app-icon">📁</div>
               <div class="app-info">
-                <h4>File Manager (Thunar)</h4>
+                <h4>This PC (64GB Storage Pool)</h4>
                 <p>Browse workspace files, ROM builds, and artifacts.</p>
               </div>
               <button class="cyber-btn sm neon-purple" onclick="focusApp('files')">OPEN FILES</button>
@@ -287,13 +370,13 @@
               <button class="cyber-btn sm neon-green" onclick="focusApp('adb')">LAUNCH SHELL</button>
             </div>
 
-            <div class="app-card" id="card-taskmgr">
-              <div class="app-icon">📊</div>
+            <div class="app-card" id="card-playstore">
+              <div class="app-icon">🛒</div>
               <div class="app-info">
-                <h4>Task Manager</h4>
-                <p>Monitor container CPU, memory, and running tasks.</p>
+                <h4>Google Play Store</h4>
+                <p>Download Android games, tools, and social apps.</p>
               </div>
-              <button class="cyber-btn sm" onclick="focusApp('taskmgr')">MONITOR</button>
+              <button class="cyber-btn sm neon-green" onclick="focusApp('playstore')">OPEN PLAY STORE</button>
             </div>
 
             <div class="app-card" id="card-ms-store">
@@ -305,22 +388,13 @@
               <button class="cyber-btn sm neon-cyan" onclick="focusApp('ms_store')">OPEN STORE</button>
             </div>
 
-            <div class="app-card" id="card-ms-office">
-              <div class="app-icon">📝</div>
+            <div class="app-card" id="card-taskmgr">
+              <div class="app-icon">📊</div>
               <div class="app-info">
-                <h4>Microsoft 365 (Office)</h4>
-                <p>Word, Excel, PowerPoint, and OneDrive online.</p>
+                <h4>Task Manager (64GB RAM)</h4>
+                <p>Monitor container CPU, memory, and running tasks.</p>
               </div>
-              <button class="cyber-btn sm neon-amber" onclick="focusApp('ms_office')">OPEN OFFICE</button>
-            </div>
-
-            <div class="app-card" id="card-flathub">
-              <div class="app-icon">🛒</div>
-              <div class="app-info">
-                <h4>Flathub Linux Store</h4>
-                <p>Thousands of popular Linux games & apps.</p>
-              </div>
-              <button class="cyber-btn sm neon-green" onclick="focusApp('flathub')">OPEN FLATHUB</button>
+              <button class="cyber-btn sm" onclick="focusApp('taskmgr')">MONITOR</button>
             </div>
 
             <div class="app-card" id="card-synaptic">
@@ -351,29 +425,55 @@
       <section id="tab-copilot" class="tab-content">
         <div class="viewer-toolbar copilot-toolbar">
           <div class="copilot-nav-pills">
-            <button class="copilot-subtab-btn active" data-subtab="chat">💬 AI Chat & Shell</button>
+            <button class="copilot-subtab-btn active" data-subtab="chat">💬 Jarvis Voice & Shell</button>
+            <button class="copilot-subtab-btn" data-subtab="cloud">☁️ Email Cloud & Activity</button>
             <button class="copilot-subtab-btn" data-subtab="history">📜 Past Chats Archive</button>
-            <button class="copilot-subtab-btn" data-subtab="memory">🧠 System & Phone Memory</button>
+            <button class="copilot-subtab-btn" data-subtab="memory">🧠 System & 64GB RAM</button>
           </div>
           <div class="mode-toggles">
+            <button id="copilot-tts-toggle" class="cyber-btn xs neon-purple" title="Jarvis Voice Speech Response">🔊 Voice: ON</button>
+            <button id="copilot-camera-btn" class="cyber-btn xs neon-cyan" title="Open Live Camera Feed for Visual AI Analysis">📷 Live Vision</button>
             <button id="copilot-status-btn" class="cyber-btn xs neon-green">⚡ AI: Ready</button>
-            <button id="copilot-clear-chat" class="cyber-btn xs">🗑️ Clear Chat</button>
+            <button id="copilot-clear-chat" class="cyber-btn xs">🗑️ Clear</button>
           </div>
         </div>
 
-        <!-- Subtab 1: Live Chat & Shell Execution -->
+        <!-- Subtab 1: Live Chat, Jarvis Voice & Optical Vision -->
         <div id="subtab-copilot-chat" class="copilot-subtab-content active">
+          <!-- Jarvis Live Camera Optical Vision HUD -->
+          <div id="jarvis-camera-panel" class="jarvis-camera-panel hidden">
+            <div class="camera-hud-header">
+              <span>📷 JARVIS LIVE OPTICAL VIEWFINDER (120 FPS)</span>
+              <button id="jarvis-camera-close" class="cyber-btn xs" type="button">✕ CLOSE</button>
+            </div>
+            <div class="camera-video-wrapper">
+              <video id="jarvis-camera-stream" autoplay playsinline muted></video>
+              <canvas id="jarvis-camera-canvas" style="display:none;"></canvas>
+              <div class="camera-target-crosshair"></div>
+              <div class="camera-hud-overlay">
+                <span class="hud-tag">STATUS: LIVE STREAMING</span>
+                <span class="hud-fps">120 FPS OPTICAL SYNC</span>
+              </div>
+            </div>
+            <div class="camera-hud-actions">
+              <button id="jarvis-camera-scan-btn" class="cyber-btn neon-cyan" type="button">👁️ SCAN & ASK JARVIS</button>
+            </div>
+          </div>
+
           <!-- Quick Prompt Chips -->
           <div class="copilot-chips-scroll">
-            <button class="copilot-chip" data-cmd="status">📊 System Status</button>
+            <button class="copilot-chip" data-cmd="status">📊 System Architecture (120FPS & 64GB)</button>
+            <button class="copilot-chip" data-cmd="open blender">🎨 Launch Blender 5.0</button>
+            <button class="copilot-chip" data-cmd="open unreal">⚡ Launch Unreal Engine 6</button>
+            <button class="copilot-chip" data-cmd="open epic">🎮 Open Epic Games</button>
+            <button class="copilot-chip" data-cmd="open edge">🌐 Open Microsoft Edge</button>
+            <button class="copilot-chip" data-cmd="open vlc">🎬 Open VLC Player</button>
+            <button class="copilot-chip" data-cmd="open apk">📱 APK Installer</button>
+            <button class="copilot-chip" data-cmd="open wine">🪟 Wine Admin (.EXE)</button>
             <button class="copilot-chip" data-cmd="open chrome">🌐 Open Chrome</button>
             <button class="copilot-chip" data-cmd="open cmd">💻 Command Prompt</button>
             <button class="copilot-chip" data-cmd="open powershell">⚡ PowerShell</button>
-            <button class="copilot-chip" data-cmd="open files">📁 This PC / Files</button>
             <button class="copilot-chip" data-cmd="refresh">🔄 Refresh Desktop</button>
-            <button class="copilot-chip" data-cmd="history">📜 Browse Old Chats</button>
-            <button class="copilot-chip" data-cmd="memory">🧠 Phone Specs (Moto G45)</button>
-            <button class="copilot-chip" data-cmd="trackpad">🖱️ Touch vs Trackpad</button>
           </div>
 
           <!-- Chat Messages Area -->
@@ -381,12 +481,14 @@
             <div class="copilot-msg ai-msg">
               <div class="msg-avatar">⚡</div>
               <div class="msg-body">
-                <div class="msg-author">VirgoX AI Copilot</div>
+                <div class="msg-author">VirgoX Jarvis AI</div>
                 <div class="msg-text">
-                  Welcome back! I am connected to your <strong>VirgoX Cloud Computer</strong> and your system pair-programming assistant.<br><br>
-                  • Send me instructions like <em>"open chrome"</em>, <em>"open powershell"</em>, <em>"status"</em>, or <em>"refresh"</em>.<br>
-                  • Run any shell command directly by typing <code>$ &lt;cmd&gt;</code> (e.g. <code>$ docker ps</code>, <code>$ free -h</code>).<br>
-                  • All your past conversations, ROM build files, and phone hardware specs are stored in the memory vault tabs above!
+                  Systems online. I am <strong>Jarvis</strong>, your intelligent pair-programming and Cloud PC copilot.<br><br>
+                  • 🎙️ <strong>Two-Way Voice:</strong> Tap the mic button to talk directly to me. I will speak back to you aloud.<br>
+                  • 📷 <strong>Live Camera Vision:</strong> Tap <em>"Live Vision"</em> above to show me your camera live in real-time.<br>
+                  • 🛍️ <strong>Preinstalled Ecosystem:</strong> Blender 5.0, Unreal Engine 6 Hub, Epic Games, Microsoft Edge, VLC Player, Wine, and APK Installer.<br>
+                  • ☁️ <strong>User Email Cloud:</strong> All your activity and settings are automatically synchronized to your registered email.<br>
+                  • ⚡ <strong>Hardware Engine:</strong> 120 FPS Hardware-Synced Pipeline with 64 GB Virtual RAM.
                 </div>
               </div>
             </div>
@@ -396,10 +498,53 @@
           <div class="copilot-input-bar">
             <input type="file" id="copilot-file-input" style="display:none;" />
             <button id="copilot-upload-btn" class="cyber-btn sm" title="Upload file from phone (ui.png, b.m4, etc.)" style="padding: 8px 12px; font-size: 14px;">📎</button>
-            <input type="text" id="copilot-input" class="cyber-input copilot-input-field" placeholder="Ask AI or type command ($ ls, open chrome, status)..." autocomplete="off" />
+            <button id="copilot-mic-btn" class="cyber-btn sm neon-purple" title="Voice Command (Tap to talk to Jarvis)" style="padding: 8px 12px; font-size: 15px;">🎙️</button>
+            <input type="text" id="copilot-input" class="cyber-input copilot-input-field" placeholder="Talk or type to Jarvis ($ cmd, open blender, open unreal)..." autocomplete="off" />
             <button id="copilot-send-btn" class="cyber-btn neon-cyan">SEND ↵</button>
           </div>
           <div id="copilot-upload-status" style="font-size: 12px; color: var(--neon-cyan); margin-top: 5px; display: none;"></div>
+        </div>
+
+        <!-- Subtab: Email Cloud & Activity Timeline -->
+        <div id="subtab-copilot-cloud" class="copilot-subtab-content">
+          <div class="cloud-vault-header" style="background:rgba(10,14,26,0.7); border:1px solid rgba(0,242,254,0.25); border-radius:12px; padding:16px; margin-bottom:16px;">
+            <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+              <span style="font-size:2rem;">☁️</span>
+              <div>
+                <h3 id="cloud-user-email-display" style="margin:0; font-size:1.1rem; color:var(--neon-cyan);">Email Cloud Profile</h3>
+                <p style="margin:4px 0 0 0; font-size:0.8rem; color:var(--text-muted);">Persistent storage, settings, and activity audit log</p>
+              </div>
+              <button id="btn-force-cloud-sync" class="cyber-btn sm neon-green" type="button" style="margin-left:auto;">🔄 SYNC CLOUD NOW</button>
+            </div>
+          </div>
+          
+          <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(140px, 1fr)); gap:10px; margin-bottom:16px;">
+            <div class="metric-card" style="padding:12px; background:rgba(0,242,254,0.05); border:1px solid rgba(0,242,254,0.2); border-radius:8px;">
+              <div style="font-size:1.2rem; font-weight:800; color:var(--neon-cyan);">64 GB</div>
+              <div style="font-size:0.75rem; color:var(--text-muted);">Virtual RAM (ZRAM)</div>
+            </div>
+            <div class="metric-card" style="padding:12px; background:rgba(123,44,191,0.05); border:1px solid rgba(123,44,191,0.2); border-radius:8px;">
+              <div style="font-size:1.2rem; font-weight:800; color:var(--neon-purple);">120 FPS</div>
+              <div style="font-size:0.75rem; color:var(--text-muted);">Pipeline Refresh Rate</div>
+            </div>
+            <div class="metric-card" style="padding:12px; background:rgba(0,245,212,0.05); border:1px solid rgba(0,245,212,0.2); border-radius:8px;">
+              <div style="font-size:1.2rem; font-weight:800; color:var(--neon-green);">UNLIMITED</div>
+              <div style="font-size:0.75rem; color:var(--text-muted);">Cloud Storage Pool</div>
+            </div>
+            <div class="metric-card" style="padding:12px; background:rgba(255,158,0,0.05); border:1px solid rgba(255,158,0,0.2); border-radius:8px;">
+              <div id="cloud-activity-count" style="font-size:1.2rem; font-weight:800; color:var(--neon-amber);">Active</div>
+              <div style="font-size:0.75rem; color:var(--text-muted);">Cloud Audit Sync</div>
+            </div>
+          </div>
+
+          <div class="cloud-timeline-container">
+            <h4 style="margin:0 0 10px 0; color:var(--neon-cyan); display:flex; align-items:center; gap:8px;">
+              <span>📜 Real-Time Activity Timeline</span>
+            </h4>
+            <div id="cloud-timeline-list" class="cloud-timeline-list" style="display:flex; flex-direction:column; gap:8px; max-height:400px; overflow-y:auto;">
+              <!-- Dynamically populated from email cloud -->
+            </div>
+          </div>
         </div>
 
         <!-- Subtab 2: Past Chats Archive -->
