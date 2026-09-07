@@ -8,9 +8,9 @@
 
   // Default Configuration
   const DEFAULT_CONFIG = {
-    desktopUrl: 'https://former-warranties-chance-consortium.trycloudflare.com',
-    terminalUrl: 'https://actors-garlic-cookies-starts.trycloudflare.com',
-    bridgeUrl: 'https://adventure-vocal-paragraph-betting.trycloudflare.com',
+    desktopUrl: 'https://soa-rabbit-handhelds-corrections.trycloudflare.com',
+    terminalUrl: 'https://lions-eval-aims-officials.trycloudflare.com',
+    bridgeUrl: 'https://issues-communist-vector-dive.trycloudflare.com',
     sensitivity: 1.5,
     crosshairEnabled: false,
     ecoMode: true
