@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>VirgoX Cloud Computer — Web Control Suite</title>
-  <link rel="stylesheet" href="style.css?v=20260907_05" />
+  <link rel="stylesheet" href="style.css?v=20260907_06" />
   <link rel="manifest" href="manifest.json" />
   <meta name="theme-color" content="#0a0b10" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -73,6 +73,10 @@
         <span class="tab-icon">⚡</span>
         <span class="tab-title">Quick Deck</span>
       </button>
+      <button class="tab-btn" data-tab="copilot">
+        <span class="tab-icon">🤖</span>
+        <span class="tab-title">AI Copilot</span>
+      </button>
     </nav>
 
     <!-- Main Content Area -->
@@ -137,6 +141,18 @@
           <iframe id="desktop-frame" src="about:blank" allow="autoplay; fullscreen; clipboard-read; clipboard-write; display-capture"></iframe>
           <!-- Floating Keyboard Button for Mobile/Touch -->
           <button id="fab-btn-keyboard" class="floating-kb-fab" title="Open Phone Keyboard">⌨️</button>
+
+          <!-- Floating Input Mode Quick Switcher Pill (Trackpad vs Direct Touch) -->
+          <div id="floating-input-mode-pill" class="floating-mode-pill">
+            <button id="btn-quick-mode-toggle" class="pill-btn" title="Tap to switch between Trackpad Mode and Direct Touch Mode">
+              <span id="pill-icon">🖱️</span>
+              <div class="pill-text-block">
+                <span id="pill-title">Trackpad (Laptop Mode)</span>
+                <span id="pill-sub">Glide finger • Tap clicks cursor • 2-finger scroll</span>
+              </div>
+              <span class="pill-badge" id="pill-badge">SWITCH</span>
+            </button>
+          </div>
         </div>
 
         <!-- Touchpad Floating Dock (for Desktop View) -->
@@ -330,6 +346,88 @@
         </div>
       </section>
 
+      <!-- AI COPILOT & MEMORY TAB -->
+      <section id="tab-copilot" class="tab-content">
+        <div class="viewer-toolbar copilot-toolbar">
+          <div class="copilot-nav-pills">
+            <button class="copilot-subtab-btn active" data-subtab="chat">💬 AI Chat & Shell</button>
+            <button class="copilot-subtab-btn" data-subtab="history">📜 Past Chats Archive</button>
+            <button class="copilot-subtab-btn" data-subtab="memory">🧠 System & Phone Memory</button>
+          </div>
+          <div class="mode-toggles">
+            <button id="copilot-status-btn" class="cyber-btn xs neon-green">⚡ AI: Ready</button>
+            <button id="copilot-clear-chat" class="cyber-btn xs">🗑️ Clear Chat</button>
+          </div>
+        </div>
+
+        <!-- Subtab 1: Live Chat & Shell Execution -->
+        <div id="subtab-copilot-chat" class="copilot-subtab-content active">
+          <!-- Quick Prompt Chips -->
+          <div class="copilot-chips-scroll">
+            <button class="copilot-chip" data-cmd="status">📊 System Status</button>
+            <button class="copilot-chip" data-cmd="open chrome">🌐 Open Chrome</button>
+            <button class="copilot-chip" data-cmd="open cmd">💻 Command Prompt</button>
+            <button class="copilot-chip" data-cmd="open powershell">⚡ PowerShell</button>
+            <button class="copilot-chip" data-cmd="open files">📁 This PC / Files</button>
+            <button class="copilot-chip" data-cmd="refresh">🔄 Refresh Desktop</button>
+            <button class="copilot-chip" data-cmd="history">📜 Browse Old Chats</button>
+            <button class="copilot-chip" data-cmd="memory">🧠 Phone Specs (Moto G45)</button>
+            <button class="copilot-chip" data-cmd="trackpad">🖱️ Touch vs Trackpad</button>
+          </div>
+
+          <!-- Chat Messages Area -->
+          <div id="copilot-chat-stream" class="copilot-chat-stream">
+            <div class="copilot-msg ai-msg">
+              <div class="msg-avatar">⚡</div>
+              <div class="msg-body">
+                <div class="msg-author">VirgoX AI Copilot</div>
+                <div class="msg-text">
+                  Welcome back! I am connected to your <strong>VirgoX Cloud Computer</strong> and your system pair-programming assistant.<br><br>
+                  • Send me instructions like <em>"open chrome"</em>, <em>"open powershell"</em>, <em>"status"</em>, or <em>"refresh"</em>.<br>
+                  • Run any shell command directly by typing <code>$ &lt;cmd&gt;</code> (e.g. <code>$ docker ps</code>, <code>$ free -h</code>).<br>
+                  • All your past conversations, ROM build files, and phone hardware specs are stored in the memory vault tabs above!
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Chat Input Bar -->
+          <div class="copilot-input-bar">
+            <input type="text" id="copilot-input" class="cyber-input copilot-input-field" placeholder="Ask AI or type command ($ ls, open chrome, status)..." autocomplete="off" />
+            <button id="copilot-send-btn" class="cyber-btn neon-cyan">SEND ↵</button>
+          </div>
+        </div>
+
+        <!-- Subtab 2: Past Chats Archive -->
+        <div id="subtab-copilot-history" class="copilot-subtab-content">
+          <div class="history-archive-header">
+            <h3>📜 VirgoX Chat History & Session Vault</h3>
+            <p class="section-desc">Historical conversations saved in <code>~/.gemini/antigravity-cli/brain/</code>:</p>
+          </div>
+          <div id="history-cards-container" class="history-cards-grid">
+            <!-- Dynamically injected by app.js -->
+          </div>
+        </div>
+
+        <!-- Subtab 3: System & Phone Memory -->
+        <div id="subtab-copilot-memory" class="copilot-subtab-content">
+          <div class="memory-vault-header">
+            <h3>🧠 System Specs & Device Memory</h3>
+            <p class="section-desc">Hardware specs & custom ROM configurations stored in <code>virgox_memory.json</code>:</p>
+          </div>
+          <div id="memory-cards-container" class="memory-cards-grid">
+            <!-- Dynamically injected by app.js -->
+          </div>
+          <div class="memory-add-box">
+            <h4>📝 Add Note to Permanent Cloud Memory:</h4>
+            <div class="memory-input-row">
+              <input type="text" id="input-new-note" class="cyber-input" placeholder="e.g. Flash vbmeta with --disable-verity on fastboot..." />
+              <button id="btn-save-note" class="cyber-btn neon-green">SAVE NOTE</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <!-- Mobile Virtual Keyboard Drawer (Global across all tabs) -->
       <div id="keyboard-drawer" class="keyboard-drawer hidden">
         <div class="kb-header">
@@ -473,6 +571,6 @@
 
   </div>
 
-  <script src="app.js?v=20260907_05"></script>
+  <script src="app.js?v=20260907_06"></script>
 </body>
 </html>

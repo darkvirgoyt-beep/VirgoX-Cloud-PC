@@ -73,8 +73,8 @@ console.log('[+] app.js updated successfully');
 "
 
 echo "=== [5/5] Pushing to GitHub ==="
-git add app.js start_services.sh
-git commit -m "⚡ Update live tunnel URLs and service launcher" || echo "Nothing to commit"
+git add app.js index.html server.py style.css start_services.sh
+git commit -m "⚡ Update live tunnel URLs, AI Copilot, and Trackpad/Touch mode switcher" || echo "Nothing to commit"
 git push origin main
 git push origin main:gh-pages --force
 

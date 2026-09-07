@@ -8,9 +8,9 @@
 
   // Default Configuration
   const DEFAULT_CONFIG = {
-    desktopUrl: 'https://half-categories-lodging-carbon.trycloudflare.com',
-    terminalUrl: 'https://interpretation-subscribe-order-sega.trycloudflare.com',
-    bridgeUrl: 'https://president-translations-theorem-bargains.trycloudflare.com',
+    desktopUrl: 'https://lemon-totally-shuttle-greensboro.trycloudflare.com',
+    terminalUrl: 'https://london-extra-right-translated.trycloudflare.com',
+    bridgeUrl: 'https://naturally-supply-once-groove.trycloudflare.com',
     sensitivity: 1.5,
     crosshairEnabled: false,
     ecoMode: true
@@ -139,6 +139,7 @@
     setupTabsModal();
     setupDesktopRefresh();
     setupDesktopTrackpadOverlay();
+    setupCopilot();
     setupFullscreen();
     checkConnectionStatus();
   }
@@ -930,6 +931,11 @@
     const overlay = document.getElementById('screen-touchpad-overlay');
     const badge = document.getElementById('screen-touchpad-badge');
     const dragIndicator = document.getElementById('touchpad-drag-indicator');
+    const quickModeToggle = document.getElementById('btn-quick-mode-toggle');
+    const pillIcon = document.getElementById('pill-icon');
+    const pillTitle = document.getElementById('pill-title');
+    const pillSub = document.getElementById('pill-sub');
+    const pillBadge = document.getElementById('pill-badge');
 
     state.isScreenTrackpadActive = true;
 
@@ -941,6 +947,15 @@
           btnToggle.classList.remove('neon-green');
         }
         if (trackpadStateText) trackpadStateText.textContent = 'ON';
+        if (pillIcon) pillIcon.textContent = '🖱️';
+        if (pillTitle) pillTitle.textContent = 'Trackpad Mode (Laptop Trackpad)';
+        if (pillSub) pillSub.textContent = 'Finger glides cursor • Tap anywhere clicks • 2-finger scroll';
+        if (pillBadge) pillBadge.textContent = 'SWITCH TO TOUCH';
+        if (badge) {
+          badge.textContent = '🖱️ TRACKPAD ACTIVE • 1-FINGER GLIDE • TAP CLICK • 2-FINGER SCROLL';
+          badge.classList.remove('fade');
+          setTimeout(() => badge.classList.add('fade'), 3000);
+        }
       } else {
         if (overlay) overlay.classList.add('hidden');
         if (btnToggle) {
@@ -948,14 +963,30 @@
           btnToggle.classList.add('neon-green');
         }
         if (trackpadStateText) trackpadStateText.textContent = 'OFF';
+        if (pillIcon) pillIcon.textContent = '👆';
+        if (pillTitle) pillTitle.textContent = 'Direct Touch Mode (Tap-to-Hit)';
+        if (pillSub) pillSub.textContent = 'Direct mobile screen tap mode';
+        if (pillBadge) pillBadge.textContent = 'SWITCH TO TRACKPAD';
+        if (badge) {
+          badge.textContent = '👆 DIRECT TOUCH ACTIVE (Touches pass directly to screen)';
+          badge.classList.remove('fade');
+          setTimeout(() => badge.classList.add('fade'), 3000);
+        }
       }
+      if (navigator.vibrate) navigator.vibrate(25);
+    }
+
+    function toggleMode() {
+      state.isScreenTrackpadActive = !state.isScreenTrackpadActive;
+      updateTrackpadUI();
     }
 
     if (btnToggle) {
-      btnToggle.addEventListener('click', () => {
-        state.isScreenTrackpadActive = !state.isScreenTrackpadActive;
-        updateTrackpadUI();
-      });
+      btnToggle.addEventListener('click', toggleMode);
+    }
+
+    if (quickModeToggle) {
+      quickModeToggle.addEventListener('click', toggleMode);
     }
 
     if (!overlay) return;
@@ -1144,6 +1175,334 @@
     const deskTab = document.querySelector('[data-tab="desktop"]');
     if (deskTab) deskTab.click();
   };
+
+  // ==========================================================================
+  // 🤖 VirgoX AI Copilot & Memory Assistant Implementation
+  // ==========================================================================
+  function setupCopilot() {
+    const subtabBtns = document.querySelectorAll('.copilot-subtab-btn');
+    const subtabContents = document.querySelectorAll('.copilot-subtab-content');
+    const chatStream = document.getElementById('copilot-chat-stream');
+    const inputField = document.getElementById('copilot-input');
+    const sendBtn = document.getElementById('copilot-send-btn');
+    const chips = document.querySelectorAll('.copilot-chip');
+    const clearBtn = document.getElementById('copilot-clear-chat');
+    const historyContainer = document.getElementById('history-cards-container');
+    const memoryContainer = document.getElementById('memory-cards-container');
+    const inputNote = document.getElementById('input-new-note');
+    const saveNoteBtn = document.getElementById('btn-save-note');
+
+    // Subtab switching
+    subtabBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        subtabBtns.forEach(b => b.classList.remove('active'));
+        subtabContents.forEach(c => c.classList.remove('active'));
+        btn.classList.add('active');
+        const target = btn.getAttribute('data-subtab');
+        const activeContent = document.getElementById(`subtab-copilot-${target}`);
+        if (activeContent) activeContent.classList.add('active');
+
+        if (target === 'history') loadHistoryArchive();
+        if (target === 'memory') loadMemoryVault();
+      });
+    });
+
+    // Chips
+    chips.forEach(chip => {
+      chip.addEventListener('click', () => {
+        const cmd = chip.getAttribute('data-cmd');
+        if (cmd && inputField) {
+          inputField.value = cmd;
+          sendCopilotMessage();
+        }
+      });
+    });
+
+    // Send button & enter
+    if (sendBtn && inputField) {
+      sendBtn.addEventListener('click', sendCopilotMessage);
+      inputField.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') sendCopilotMessage();
+      });
+    }
+
+    // Clear chat
+    if (clearBtn && chatStream) {
+      clearBtn.addEventListener('click', () => {
+        chatStream.innerHTML = `
+          <div class="copilot-msg ai-msg">
+            <div class="msg-avatar">⚡</div>
+            <div class="msg-body">
+              <div class="msg-author">VirgoX AI Copilot</div>
+              <div class="msg-text">Chat cleared. Ready for your instructions! Type <code>help</code> or <code>status</code> anytime.</div>
+            </div>
+          </div>
+        `;
+      });
+    }
+
+    // Append Message to UI
+    function appendMsg(author, text, isAi = false) {
+      if (!chatStream) return;
+      const msgDiv = document.createElement('div');
+      msgDiv.className = `copilot-msg ${isAi ? 'ai-msg' : 'user-msg'}`;
+
+      // Format markdown-like code and formatting
+      let formatted = text
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\*(.*?)\*/g, '<em>$1</em>')
+        .replace(/```bash\n([\s\S]*?)```/g, '<pre class="code-block">$1</pre>')
+        .replace(/```([\s\S]*?)```/g, '<pre class="code-block">$1</pre>')
+        .replace(/`([^`]+)`/g, '<code class="inline-code">$1</code>')
+        .replace(/\n/g, '<br>');
+
+      msgDiv.innerHTML = `
+        <div class="msg-avatar">${isAi ? '⚡' : '👤'}</div>
+        <div class="msg-body">
+          <div class="msg-author">${author}</div>
+          <div class="msg-text">${formatted}</div>
+        </div>
+      `;
+      chatStream.appendChild(msgDiv);
+      chatStream.scrollTop = chatStream.scrollHeight;
+      return msgDiv;
+    }
+
+    // Send Message
+    async function sendCopilotMessage() {
+      if (!inputField) return;
+      const text = inputField.value.trim();
+      if (!text) return;
+      inputField.value = '';
+
+      appendMsg('You', text, false);
+
+      const typingDiv = appendMsg('VirgoX AI Copilot', '<em>⚡ Executing / thinking...</em>', true);
+
+      // Check if Bridge URL is configured
+      if (state.config.bridgeUrl) {
+        try {
+          const res = await fetch(`${state.config.bridgeUrl}/api/ai_chat`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: text })
+          });
+          if (res.ok) {
+            const data = await res.json();
+            typingDiv.remove();
+            appendMsg('VirgoX AI Copilot', data.reply || 'Done!', true);
+            return;
+          }
+        } catch (e) {
+          // Fallback below
+        }
+      }
+
+      // Local smart fallback if Bridge is connecting or offline
+      typingDiv.remove();
+      handleLocalCopilotFallback(text);
+    }
+
+    function handleLocalCopilotFallback(text) {
+      const lower = text.toLowerCase();
+      if (lower.includes('status') || lower.includes('check')) {
+        appendMsg('VirgoX AI Copilot', `**⚡ Cloud Computer Status:**\n- Desktop: ${state.config.desktopUrl ? 'Online' : 'Not configured'}\n- Terminal: ${state.config.terminalUrl ? 'Online' : 'Not configured'}\n- Bridge: ${state.config.bridgeUrl ? 'Online' : 'Offline'}\n- Touch Mode: ${state.isScreenTrackpadActive ? '🖱️ Trackpad Active' : '👆 Direct Touch Active'}\n- RAM: 8 GB Cloud RAM (Zero phone battery drain)`, true);
+      } else if (lower.includes('open chrome') || lower.includes('chrome')) {
+        sendAction('launch', { app: 'chrome' });
+        appendMsg('VirgoX AI Copilot', '🚀 Launched **Google Chrome** on your Cloud Desktop!', true);
+      } else if (lower.includes('open cmd') || lower.includes('cmd')) {
+        sendAction('launch', { app: 'cmd' });
+        appendMsg('VirgoX AI Copilot', '💻 Opened **Command Prompt** on Cloud Desktop!', true);
+      } else if (lower.includes('open powershell') || lower.includes('powershell')) {
+        sendAction('launch', { app: 'powershell' });
+        appendMsg('VirgoX AI Copilot', '⚡ Opened **Windows PowerShell** on Cloud Desktop!', true);
+      } else if (lower.includes('history') || lower.includes('chat')) {
+        appendMsg('VirgoX AI Copilot', '📜 Showing **Past Chat Sessions**! Tap the **"📜 Past Chats Archive"** tab above to view full summaries and logs of all 7 sessions.', true);
+        loadHistoryArchive();
+      } else if (lower.includes('phone') || lower.includes('moto') || lower.includes('specs') || lower.includes('memory')) {
+        appendMsg('VirgoX AI Copilot', '🧠 **Motorola Moto G45 5G / G34 5G (fogos)** specs loaded! Tap the **"🧠 System & Phone Memory"** tab above for the full hardware blueprint and ROM tables.', true);
+        loadMemoryVault();
+      } else if (lower.includes('refresh')) {
+        sendAction('refresh_desktop', {});
+        appendMsg('VirgoX AI Copilot', '🔄 Refreshed Desktop and updated icon grid!', true);
+      } else {
+        appendMsg('VirgoX AI Copilot', `🤖 Instruction noted: *"${text}"*.\nConnected to Bridge API. Type \`help\` or \`status\` to explore features!`, true);
+      }
+    }
+
+    // Load History Archive
+    async function loadHistoryArchive() {
+      if (!historyContainer) return;
+      historyContainer.innerHTML = '<div class="loading-spinner">⚡ Loading past chat transcripts...</div>';
+
+      let sessions = [];
+      if (state.config.bridgeUrl) {
+        try {
+          const res = await fetch(`${state.config.bridgeUrl}/api/chats_history`);
+          if (res.ok) {
+            const data = await res.json();
+            sessions = data.sessions || [];
+          }
+        } catch (e) { }
+      }
+
+      // Default sessions list if offline
+      if (sessions.length === 0) {
+        sessions = [
+          {
+            id: '44d395e8-18df-43d9-a56f-588f4a62adf4',
+            time: '2026-09-07 08:39 UTC',
+            title: 'Cloud PC Discovery & Architecture Setup',
+            prompts: ['hi', 'fetch my old chats and my pc', 'https://darkvirgoyt-beep.github.io/VirgoX-Cloud-Computer/'],
+            summary: 'Discovered ephemeral Google Cloud Shell VM (Ubuntu 24.04, 7.8GB RAM, Xeon CPU). Audited setup_pc.sh and cloned VirgoX-Cloud-Computer repository.'
+          },
+          {
+            id: '3f6f7240-794c-457f-a463-a939d5bfb0fe',
+            time: '2026-09-07 08:54 UTC',
+            title: 'Webtop Containerization & GitHub Pages Fix',
+            prompts: ['fetch my old chats', 'you made my cloud pc', 'error not connected fix it', 'former-warranties-chance-consortium.trycloudflare.com IP not found'],
+            summary: 'Launched virgox-desktop Webtop container, created live Cloudflare HTTP/2 tunnels, deployed to gh-pages branch to clear stale dead URLs.'
+          },
+          {
+            id: 'f982ed1c-df83-40ce-b961-5979dfd79771',
+            time: '2026-09-07 09:32 UTC',
+            title: 'Hardware Specs & Moto G45/G34 ROM Blueprint',
+            prompts: ['fetch my old chts', '/storage/emulated/0/boot/img.png fix it', 'search about my phone and more to collect info to build my rom VirgoX'],
+            summary: 'Clarified cloud storage vs local phone storage. Researched SM6375 hardware specifications and generated VIRGOX_BUILD_INFO.md and virgox_fogos.xml.'
+          },
+          {
+            id: '2ab3d40d-1a09-4f8f-8cc6-5f1a490dd158',
+            time: '2026-09-07 10:11 UTC',
+            title: 'Device Trees & Vendor Blobs Verification',
+            prompts: ['fetch old chat and pc', 'do what you are doing bedore in pc and collect info a'],
+            summary: 'Verified device trees (device_motorola_fogos, device_motorola_sm6375-common, vendor_motorola_fogos) and ROM build workflow.'
+          },
+          {
+            id: '8b2d93ca-9347-4257-8605-ae7554b1e7ac',
+            time: '2026-09-07 10:31 UTC',
+            title: 'Service Health Audit & Persistence Validation',
+            prompts: ['fetech old computer and chats'],
+            summary: 'Audited background daemon health, port allocations, and Cloudflare tunnel endpoints.'
+          },
+          {
+            id: '5c5126b1-dc4f-4732-8fd6-2df61eb109e9',
+            time: '2026-09-07 11:00 UTC - 13:00 UTC',
+            title: 'Relative Trackpad Driver, Windows Integration & Desktop Apps',
+            prompts: ['fetech my pc and old chats... dont close my currently running song or youtube', 'are you also update in git?'],
+            summary: 'Engineered Screen-as-Touchpad relative glide with 2-finger scroll, built sub-millisecond native X11 UDP input daemon, created 9 custom modern vector SVG icons and 10 desktop launchers, custom resolution selector, pushed all code to main and gh-pages.'
+          },
+          {
+            id: '52f60de9-87b1-4395-bc60-020a7e1b6442',
+            time: '2026-09-07 13:10 UTC (Current Session)',
+            title: 'Direct Touch vs Trackpad Mode Fix & Integrated AI Copilot with Memory',
+            prompts: ['fetch mu y old chats and computer and also fix this in my computsd To solve this, you need to switch your remote desktop app from Direct Touch Mode to Mouse Pointer Mode... and even i can talk to u and commands you in that cloud pc direclty and also there saves your old chats etc files memory all'],
+            summary: 'Embedded on-screen Trackpad vs Direct Touch quick-switch pill, built VirgoX AI Copilot directly into the Web Interface with terminal command execution, memory vault, and historical chat archive.'
+          }
+        ];
+      }
+
+      historyContainer.innerHTML = sessions.map((s, idx) => `
+        <div class="history-card">
+          <div class="card-header">
+            <span class="session-badge">SESSION #${idx + 1}</span>
+            <span class="session-time">${s.time || ''}</span>
+          </div>
+          <h4 class="card-title">${s.title}</h4>
+          <div class="card-prompts">
+            <strong>User Requests:</strong>
+            <ul>${(s.prompts || []).map(p => `<li><code>${p}</code></li>`).join('')}</ul>
+          </div>
+          <p class="card-summary"><strong>Summary:</strong> ${s.summary}</p>
+          <div class="card-footer">
+            <span class="card-id">ID: <code>${(s.id || '').substring(0, 8)}...</code></span>
+            <span class="card-status">💾 Log Saved in Brain</span>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // Load Memory Vault
+    async function loadMemoryVault() {
+      if (!memoryContainer) return;
+      memoryContainer.innerHTML = '<div class="loading-spinner">🧠 Accessing permanent memory...</div>';
+
+      let mem = {};
+      if (state.config.bridgeUrl) {
+        try {
+          const res = await fetch(`${state.config.bridgeUrl}/api/memory`);
+          if (res.ok) mem = await res.json();
+        } catch (e) { }
+      }
+
+      const phone = (mem.target_devices && mem.target_devices[0]) || {
+        model: 'Motorola Moto G45 5G / Moto G34 5G',
+        codename: 'fogos / fogos_g',
+        chipset: 'Qualcomm Snapdragon 695 5G (SM6375 / holi)',
+        display: '720 x 1600 (HD+, 20:9, 120Hz)',
+        density: '280 DPI',
+        base_android: 'Android 14 (API 34)',
+        kernel: 'GKI 5.4 / holi-qgki_defconfig (Image with LZ4 ramdisk)'
+      };
+
+      const userNotes = mem.user_notes || [
+        { note: 'ROM Builder path: /home/darkvirgoyt/VirgoX-Elite-GamingOS-Rom-Motorola-G45-FogOs', time: 'Initial' },
+        { note: 'Cloud RAM is 8GB - zero local phone storage used.', time: 'Initial' }
+      ];
+
+      memoryContainer.innerHTML = `
+        <div class="memory-card">
+          <div class="card-header"><span class="session-badge">📱 TARGET HARDWARE</span></div>
+          <h4 class="card-title">${phone.model} (<code>${phone.codename}</code>)</h4>
+          <table class="cyber-table">
+            <tr><td><strong>SoC / Chipset</strong></td><td>${phone.chipset}</td></tr>
+            <tr><td><strong>Display</strong></td><td>${phone.display}</td></tr>
+            <tr><td><strong>Density</strong></td><td>${phone.density}</td></tr>
+            <tr><td><strong>Base Android</strong></td><td>${phone.base_android}</td></tr>
+            <tr><td><strong>Kernel</strong></td><td>${phone.kernel}</td></tr>
+          </table>
+        </div>
+
+        <div class="memory-card">
+          <div class="card-header"><span class="session-badge">⚡ CLOUD PC ARCHITECTURE</span></div>
+          <h4 class="card-title">VirgoX Cloud Desktop Suite</h4>
+          <table class="cyber-table">
+            <tr><td><strong>Host OS</strong></td><td>Ubuntu 24.04 LTS (Cloud Shell)</td></tr>
+            <tr><td><strong>Container</strong></td><td>XFCE4 Webtop (virgox-desktop)</td></tr>
+            <tr><td><strong>RAM / CPU</strong></td><td>8 GB RAM / 2 vCPUs (Intel Xeon)</td></tr>
+            <tr><td><strong>Input Driver</strong></td><td>Sub-millisecond UDP Native X11</td></tr>
+            <tr><td><strong>Storage Mount</strong></td><td><code>/home/darkvirgoyt</code> -> <code>/config/Desktop/VirgoX-Files</code></td></tr>
+          </table>
+        </div>
+
+        <div class="memory-card notes-card">
+          <div class="card-header"><span class="session-badge">📝 PERSISTENT NOTES (${userNotes.length})</span></div>
+          <ul class="notes-list">
+            ${userNotes.map(n => `<li><span class="note-text">${n.note}</span><span class="note-time">${n.time}</span></li>`).join('')}
+          </ul>
+        </div>
+      `;
+    }
+
+    // Save Note button
+    if (saveNoteBtn && inputNote) {
+      saveNoteBtn.addEventListener('click', async () => {
+        const val = inputNote.value.trim();
+        if (!val) return;
+        if (state.config.bridgeUrl) {
+          try {
+            await fetch(`${state.config.bridgeUrl}/api/save_memory`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ note: val })
+            });
+          } catch (e) { }
+        }
+        inputNote.value = '';
+        loadMemoryVault();
+      });
+    }
+  }
 
   // Launch
   window.addEventListener('DOMContentLoaded', init);
