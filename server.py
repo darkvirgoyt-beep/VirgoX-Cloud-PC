@@ -493,6 +493,9 @@ class BridgeHandler(BaseHTTPRequestHandler):
         self._send_cors()
         self.end_headers()
 
+    def do_HEAD(self):
+        self.do_GET()
+
     def do_GET(self):
         parsed = urlparse(self.path)
         path = parsed.path
@@ -1164,8 +1167,13 @@ print(json.dumps(apps))
             resolved_email = email_in or auth_data.get("email", "")
             if email_in and email_in in users_dict:
                 user_hash = users_dict[email_in].get("password_hash")
-            elif auth_data.get("password_hash"):
+            elif email_in and email_in == auth_data.get("email", "").lower():
                 user_hash = auth_data.get("password_hash")
+            elif not email_in and auth_data.get("password_hash"):
+                user_hash = auth_data.get("password_hash")
+            elif email_in:
+                self._respond_error("No registered account found for this email. Tap 'Verify Gmail & Set Password' to create your account.")
+                return
 
             if not user_hash:
                 self._respond_error("No registered password found. Please tap 'Verify Gmail & Set Password'.")

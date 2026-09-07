@@ -1088,6 +1088,7 @@
           <div class="auth-mode-pills" style="display:flex; gap:8px; justify-content:center; margin-top:10px; flex-wrap:wrap;">
             <button id="btn-tab-pass-mode" class="cyber-btn xs neon-cyan active" type="button">🔑 Login (Enter Password)</button>
             <button id="btn-tab-setup-mode" class="cyber-btn xs neon-green" type="button">✨ Verify Gmail & Set Password</button>
+            <button id="btn-tab-token-mode" class="cyber-btn xs neon-purple" type="button">🎫 Client Token</button>
           </div>
         </div>
 
@@ -1145,7 +1146,11 @@
             <span id="auth-display-email" class="badge-email">user@...</span>
           </div>
           <div class="auth-form-group">
-            <label for="auth-login-pass">🔑 Enter Master Password:</label>
+            <label for="auth-login-email">📧 Registered Gmail:</label>
+            <input type="email" id="auth-login-email" class="cyber-input" placeholder="e.g. yourname@gmail.com" autocomplete="email" />
+          </div>
+          <div class="auth-form-group">
+            <label for="auth-login-pass">🔑 Enter Password:</label>
             <input type="password" id="auth-login-pass" class="cyber-input" placeholder="Enter your set password to access Cloud PC" autocomplete="current-password" autofocus />
           </div>
           <button id="btn-auth-login" class="cyber-btn neon-cyan auth-submit-btn" type="button">
@@ -1193,6 +1198,27 @@
           </button>
         </div>
 
+        <!-- VIEW 5: CLIENT LICENSE TOKEN LOGIN (Commercial Tool Access) -->
+        <div id="auth-view-token" class="auth-view hidden">
+          <div class="auth-user-badge">
+            <span class="badge-label">ACCESS MODE:</span>
+            <span class="badge-email" style="color:var(--neon-purple);">COMMERCIAL CLIENT LICENSE</span>
+          </div>
+          <div class="auth-form-group">
+            <label for="auth-input-token">🎫 Enter Client License Token:</label>
+            <input type="text" id="auth-input-token" class="cyber-input" placeholder="e.g. VIRGOX-PRO-CLIENT-2026" autofocus />
+            <span class="hint">Instant access for buyers and authorized client workstations.</span>
+          </div>
+          <button id="btn-auth-token-login" class="cyber-btn neon-purple auth-submit-btn" type="button">
+            🚀 UNLOCK CLOUD PC (CLIENT ACCESS)
+          </button>
+          <div class="auth-footer-actions dual">
+            <button id="btn-auth-switch-pass-link" class="cyber-btn text-btn" type="button">
+              🔑 Return to Password Login
+            </button>
+          </div>
+        </div>
+
         <div class="auth-ai-note">
           🤖 <span><strong>AI Engine Connected:</strong> Background AI and API services remain exempted & active without password.</span>
         </div>
@@ -1201,6 +1227,6 @@
 
   </div>
 
-  <script src="app.js?v=20260907_08"></script>
+  <script src="app.js?v=20260907_09"></script>
 </body>
 </html>
