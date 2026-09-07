@@ -76,5 +76,6 @@ echo "=== [5/5] Pushing to GitHub ==="
 git add app.js start_services.sh
 git commit -m "⚡ Update live tunnel URLs and service launcher" || echo "Nothing to commit"
 git push origin main
+git push origin main:gh-pages --force
 
 echo "=== SUCCESS! ALL SERVICES ARE LIVE ==="
