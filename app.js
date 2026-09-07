@@ -1226,6 +1226,39 @@
       });
     }
 
+    // File uploader from phone
+    const uploadBtn = document.getElementById('copilot-upload-btn');
+    const fileInput = document.getElementById('copilot-file-input');
+    const uploadStatus = document.getElementById('copilot-upload-status');
+
+    if (uploadBtn && fileInput) {
+      uploadBtn.addEventListener('click', () => fileInput.click());
+      fileInput.addEventListener('change', async () => {
+        if (!fileInput.files || fileInput.files.length === 0) return;
+        const file = fileInput.files[0];
+        if (uploadStatus) {
+          uploadStatus.style.display = 'block';
+          uploadStatus.textContent = `⏳ Uploading ${file.name} (${(file.size / 1024).toFixed(1)} KB)...`;
+        }
+        try {
+          const res = await fetch(`${ACTIVE_ENDPOINTS.bridge}/api/upload?filename=${encodeURIComponent(file.name)}`, {
+            method: 'POST',
+            body: file
+          });
+          const json = await res.json();
+          if (uploadStatus) {
+            uploadStatus.textContent = `✅ Successfully uploaded ${file.name} to Cloud PC!`;
+            setTimeout(() => { uploadStatus.style.display = 'none'; }, 4000);
+          }
+          appendCopilotMessage('VirgoX AI Copilot', `✅ Received file: **${file.name}** (${(file.size / 1024).toFixed(1)} KB). Saved to \`${json.path}\`!`, 'ai');
+        } catch (err) {
+          if (uploadStatus) {
+            uploadStatus.textContent = `❌ Upload failed: ${err.message}`;
+          }
+        }
+      });
+    }
+
     // Clear chat
     if (clearBtn && chatStream) {
       clearBtn.addEventListener('click', () => {

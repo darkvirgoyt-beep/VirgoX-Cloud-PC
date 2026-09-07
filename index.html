@@ -393,9 +393,12 @@
 
           <!-- Chat Input Bar -->
           <div class="copilot-input-bar">
+            <input type="file" id="copilot-file-input" style="display:none;" />
+            <button id="copilot-upload-btn" class="cyber-btn sm" title="Upload file from phone (ui.png, b.m4, etc.)" style="padding: 8px 12px; font-size: 14px;">📎</button>
             <input type="text" id="copilot-input" class="cyber-input copilot-input-field" placeholder="Ask AI or type command ($ ls, open chrome, status)..." autocomplete="off" />
             <button id="copilot-send-btn" class="cyber-btn neon-cyan">SEND ↵</button>
           </div>
+          <div id="copilot-upload-status" style="font-size: 12px; color: var(--neon-cyan); margin-top: 5px; display: none;"></div>
         </div>
 
         <!-- Subtab 2: Past Chats Archive -->
