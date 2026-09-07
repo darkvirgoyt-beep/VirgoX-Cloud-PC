@@ -136,6 +136,8 @@
     setupCrosshair();
     setupQuickKeys();
     setupSettingsModal();
+    setupTabsModal();
+    setupDesktopRefresh();
     setupFullscreen();
     checkConnectionStatus();
   }
@@ -297,11 +299,21 @@
       return Math.sqrt(dx * dx + dy * dy);
     }
 
+    // Tap & Double Tap Tracking for Touchpad
+    let tapStartX = 0;
+    let tapStartY = 0;
+    let tapStartTime = 0;
+    let lastTapEndTime = 0;
+    let singleTapTimeout = null;
+
     touchpadSurface.addEventListener('touchstart', (e) => {
       isTouching = true;
       if (e.touches.length === 1) {
         lastX = e.touches[0].clientX;
         lastY = e.touches[0].clientY;
+        tapStartX = e.touches[0].clientX;
+        tapStartY = e.touches[0].clientY;
+        tapStartTime = Date.now();
         touchpadPointer.classList.remove('hidden');
         updatePointer(e.touches[0]);
       } else if (e.touches.length === 2) {
@@ -350,6 +362,30 @@
       if (e.touches.length === 0) {
         isTouching = false;
         touchpadPointer.classList.add('hidden');
+
+        const now = Date.now();
+        const duration = now - tapStartTime;
+        const dx = Math.abs(lastX - tapStartX);
+        const dy = Math.abs(lastY - tapStartY);
+
+        // Tap detected if duration < 300ms and minimal movement
+        if (duration < 300 && dx < 12 && dy < 12) {
+          if (now - lastTapEndTime < 350) {
+            // DOUBLE TAP!
+            if (singleTapTimeout) {
+              clearTimeout(singleTapTimeout);
+              singleTapTimeout = null;
+            }
+            sendAction('mouse_click', { button: 1, double: true });
+            lastTapEndTime = 0;
+          } else {
+            // SINGLE TAP
+            lastTapEndTime = now;
+            singleTapTimeout = setTimeout(() => {
+              sendAction('mouse_click', { button: 1 });
+            }, 350);
+          }
+        }
       }
     });
 
@@ -613,6 +649,107 @@
     if (btnApplyCustom && inputW && inputH) {
       btnApplyCustom.addEventListener('click', () => {
         applyRes(inputW.value, inputH.value);
+      });
+    }
+  }
+
+  // Windows & Tabs Switcher Modal
+  function setupTabsModal() {
+    const btnOpenTabs = document.getElementById('btn-open-tabs');
+    const tabsModal = document.getElementById('tabs-modal');
+    const closeTabsModal = document.getElementById('close-tabs-modal');
+    const windowsList = document.getElementById('active-windows-list');
+
+    if (btnOpenTabs && tabsModal) {
+      btnOpenTabs.addEventListener('click', () => {
+        tabsModal.classList.remove('hidden');
+        loadActiveWindows();
+      });
+    }
+
+    if (closeTabsModal && tabsModal) {
+      closeTabsModal.addEventListener('click', () => {
+        tabsModal.classList.add('hidden');
+      });
+      tabsModal.addEventListener('click', (e) => {
+        if (e.target === tabsModal) tabsModal.classList.add('hidden');
+      });
+    }
+
+    function loadActiveWindows() {
+      if (!windowsList) return;
+      windowsList.innerHTML = '<div style="color:var(--neon-cyan); padding:10px; font-size:0.85rem;">⚡ Scanning open windows...</div>';
+
+      if (!state.config.bridgeUrl) {
+        windowsList.innerHTML = '<div style="color:#ffaa00; padding:10px;">Bridge API not configured.</div>';
+        return;
+      }
+
+      fetch(`${state.config.bridgeUrl}/api/status`)
+        .then(r => r.json())
+        .then(data => {
+          windowsList.innerHTML = '';
+          const windows = data.active_windows || [];
+          const userWindows = windows.filter(w => !w.includes('xfce4-panel') && !w.includes(' Desktop'));
+          
+          if (userWindows.length === 0) {
+            windowsList.innerHTML = '<div style="color:var(--text-muted); font-size:0.85rem; padding:8px;">No open application windows. Tap an app below to launch.</div>';
+            return;
+          }
+
+          userWindows.forEach(winStr => {
+            const parts = winStr.trim().split(/\s+/);
+            const winId = parts[0];
+            const title = parts.slice(3).join(' ') || 'Application Window';
+            
+            let icon = '🗔';
+            const lower = title.toLowerCase();
+            if (lower.includes('chrom')) icon = '🌐';
+            else if (lower.includes('terminal') || lower.includes('cmd') || lower.includes('shell')) icon = '💻';
+            else if (lower.includes('thunar') || lower.includes('file')) icon = '📁';
+            else if (lower.includes('builder') || lower.includes('rom')) icon = '🔨';
+            else if (lower.includes('code')) icon = '📝';
+
+            const btn = document.createElement('button');
+            btn.className = 'cyber-btn sm';
+            btn.style.width = '100%';
+            btn.style.textAlign = 'left';
+            btn.style.display = 'flex';
+            btn.style.alignItems = 'center';
+            btn.style.gap = '8px';
+            btn.style.whiteSpace = 'nowrap';
+            btn.style.overflow = 'hidden';
+            btn.style.textOverflow = 'ellipsis';
+            btn.innerHTML = `<span style="font-size:1.1rem;">${icon}</span> <span style="flex:1; overflow:hidden; text-overflow:ellipsis;">${title}</span> <span style="font-size:0.7rem; color:var(--neon-cyan); opacity:0.7;">${winId}</span>`;
+
+            btn.addEventListener('click', () => {
+              sendAction('focus_window', { window_id: winId });
+              tabsModal.classList.add('hidden');
+              const deskTab = document.querySelector('.tab-btn[data-tab="desktop"]');
+              if (deskTab) deskTab.click();
+            });
+
+            windowsList.appendChild(btn);
+          });
+        })
+        .catch(err => {
+          windowsList.innerHTML = '<div style="color:#ff5555; padding:8px;">Failed to scan windows: ' + err.message + '</div>';
+        });
+    }
+  }
+
+  // Desktop Refresh Action
+  function setupDesktopRefresh() {
+    const btnRefresh = document.getElementById('btn-desktop-refresh');
+    if (btnRefresh) {
+      btnRefresh.addEventListener('click', () => {
+        btnRefresh.textContent = '🔄 Refreshing...';
+        btnRefresh.classList.add('active');
+        sendAction('refresh_desktop', {});
+        setTimeout(() => {
+          btnRefresh.textContent = '🔄 Refresh';
+          btnRefresh.classList.remove('active');
+        }, 800);
       });
     }
   }

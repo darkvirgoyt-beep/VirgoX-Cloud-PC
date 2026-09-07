@@ -93,6 +93,8 @@
             <button id="btn-toggle-eco" class="cyber-btn xs neon-green" title="Toggle Low Phone RAM / Eco Mode">⚡ Eco RAM: <span id="eco-state">ON</span></button>
             <button id="btn-orientation" class="cyber-btn xs neon-purple" title="Toggle Portrait / Landscape">📱 Portrait</button>
             <button id="btn-custom-res" class="cyber-btn xs neon-pink" title="Change Screen Resolution">🖥️ Res: <span id="res-label">1600x720</span></button>
+            <button id="btn-open-tabs" class="cyber-btn xs neon-cyan" title="Switch Open Windows & Tabs">🗔 Tabs</button>
+            <button id="btn-desktop-refresh" class="cyber-btn xs neon-green" title="Refresh Desktop (F5)">🔄 Refresh</button>
             <button id="btn-toggle-keyboard" class="cyber-btn xs neon-cyan" title="Open Phone Keyboard">⌨️ Type</button>
             <button id="btn-hand-mode" class="cyber-btn xs neon-amber" title="Toggle Hand Pan/Travel Mode">
               ✋ Hand: <span id="hand-state">OFF</span>
@@ -428,8 +430,36 @@
       </div>
     </div>
 
+    <!-- Windows & Tabs Switcher Modal -->
+    <div id="tabs-modal" class="modal-backdrop hidden">
+      <div class="cyber-modal">
+        <div class="modal-header">
+          <h3>🗔 ACTIVE WINDOWS & TASK SWITCHER</h3>
+          <button id="close-tabs-modal" class="cyber-btn sm">&times;</button>
+        </div>
+        <div class="modal-body">
+          <p style="color:var(--text-muted); font-size:0.85rem; margin-bottom:12px;">Active running windows on your Cloud PC (tap to bring to front):</p>
+          <div id="active-windows-list" style="display:flex; flex-direction:column; gap:8px; margin-bottom:16px;">
+            <!-- dynamically loaded -->
+          </div>
+
+          <h4 style="margin:0 0 8px 0; color:var(--neon-cyan); font-size:0.9rem;">Quick Launch Applications</h4>
+          <div class="quick-preset-actions" style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+            <button class="cyber-btn sm" onclick="window.focusApp('chrome')">🌐 Chrome Browser</button>
+            <button class="cyber-btn sm" onclick="window.focusApp('cmd')">💻 Command Prompt (CMD)</button>
+            <button class="cyber-btn sm" onclick="window.focusApp('powershell')">⚡ Windows PowerShell</button>
+            <button class="cyber-btn sm" onclick="window.focusApp('files')">📁 This PC / Files</button>
+            <button class="cyber-btn sm" onclick="window.focusApp('playstore')">▶ Google Play Store</button>
+            <button class="cyber-btn sm" onclick="window.focusApp('ms_store')">🛍️ Microsoft Store</button>
+            <button class="cyber-btn sm" onclick="window.focusApp('github')">🐙 GitHub</button>
+            <button class="cyber-btn sm" onclick="window.focusApp('rom_builder')">🔨 ROM Builder</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </div>
 
-  <script src="app.js?v=20260907_03"></script>
+  <script src="app.js?v=20260907_04"></script>
 </body>
 </html>

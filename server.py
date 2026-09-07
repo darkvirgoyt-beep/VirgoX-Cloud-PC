@@ -131,7 +131,7 @@ class BridgeHandler(BaseHTTPRequestHandler):
         elif path == "/api/launch":
             app = payload.get("app", "")
             if app == "chrome":
-                run_container_cmd("wmctrl -xa google-chrome || google-chrome-stable --disable-dev-shm-usage https://github.com &")
+                run_container_cmd("chromium --new-window https://google.com &")
             elif app == "files":
                 run_container_cmd("thunar /config/Desktop/VirgoX-Files &")
             elif app == "taskmgr":
@@ -139,14 +139,34 @@ class BridgeHandler(BaseHTTPRequestHandler):
             elif app == "adb":
                 run_container_cmd("xfce4-terminal -e 'adb devices' &")
             elif app == "ms_store":
-                run_container_cmd("google-chrome-stable --disable-dev-shm-usage --app=https://apps.microsoft.com &")
+                run_container_cmd("chromium --new-window --app=https://apps.microsoft.com &")
+            elif app == "playstore":
+                run_container_cmd("chromium --new-window --app=https://play.google.com/store &")
+            elif app == "github":
+                run_container_cmd("chromium --new-window --app=https://github.com/darkvirgoyt-beep &")
+            elif app == "cmd":
+                run_container_cmd("xfce4-terminal --title='Command Prompt' -e /usr/local/bin/cmd &")
+            elif app == "powershell":
+                run_container_cmd("xfce4-terminal --title='Windows PowerShell' -e /usr/local/bin/powershell &")
+            elif app == "rom_builder":
+                run_container_cmd("xfce4-terminal --title='⚡ VirgoX ROM Builder' -e 'bash /config/Desktop/VirgoX-Files/monitor_build.sh' &")
             elif app == "ms_office":
-                run_container_cmd("google-chrome-stable --disable-dev-shm-usage --app=https://www.office.com &")
+                run_container_cmd("chromium --new-window --app=https://www.office.com &")
             elif app == "flathub":
-                run_container_cmd("google-chrome-stable --disable-dev-shm-usage --app=https://flathub.org/apps &")
+                run_container_cmd("chromium --new-window --app=https://flathub.org/apps &")
             elif app == "synaptic":
                 run_container_cmd("synaptic &")
             self._respond_ok({"launched": app})
+
+        elif path == "/api/focus_window":
+            win_id = payload.get("window_id", "")
+            if win_id:
+                run_container_cmd(f"wmctrl -ia {win_id}")
+            self._respond_ok({"focused": win_id})
+
+        elif path == "/api/refresh_desktop":
+            run_container_cmd("/usr/local/bin/refresh-desktop", user="abc")
+            self._respond_ok({"refreshed": True})
 
         elif path == "/api/key":
             key = payload.get("key", "")
