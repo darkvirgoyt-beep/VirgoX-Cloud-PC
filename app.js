@@ -8,9 +8,9 @@
 
   // Default Configuration
   const DEFAULT_CONFIG = {
-    desktopUrl: 'https://wagner-delete-anchor-repairs.trycloudflare.com',
-    terminalUrl: 'https://suggestions-innovation-elementary-incidence.trycloudflare.com',
-    bridgeUrl: 'https://evaluating-twin-county-meditation.trycloudflare.com',
+    desktopUrl: 'https://api.trycloudflare.com',
+    terminalUrl: 'https://api.trycloudflare.com',
+    bridgeUrl: 'https://chocolate-embassy-mileage-align.trycloudflare.com',
     sensitivity: 1.5,
     crosshairEnabled: false,
     ecoMode: true
