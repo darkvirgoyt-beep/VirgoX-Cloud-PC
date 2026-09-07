@@ -327,10 +327,42 @@ class BridgeHandler(BaseHTTPRequestHandler):
                 "ai_bypass": True
             })
 
-        else:
-            self.send_response(404)
-            self._send_cors()
-            self.end_headers()
+        # Static web app files serving
+        static_dir = os.path.abspath(os.path.dirname(__file__))
+        rel_path = path.lstrip("/")
+        if not rel_path or rel_path == "index.html":
+            rel_path = "index.html"
+        file_path = os.path.join(static_dir, rel_path)
+        if os.path.commonpath([static_dir, os.path.abspath(file_path)]) == static_dir and os.path.isfile(file_path):
+            ext = os.path.splitext(file_path)[1].lower()
+            mime_types = {
+                ".html": "text/html; charset=utf-8",
+                ".js": "application/javascript",
+                ".css": "text/css",
+                ".json": "application/json",
+                ".png": "image/png",
+                ".jpg": "image/jpeg",
+                ".jpeg": "image/jpeg",
+                ".svg": "image/svg+xml",
+                ".ico": "image/x-icon",
+            }
+            content_type = mime_types.get(ext, "application/octet-stream")
+            try:
+                with open(file_path, "rb") as f:
+                    content = f.read()
+                self.send_response(200)
+                self._send_cors()
+                self.send_header("Content-Type", content_type)
+                self.send_header("Content-Length", str(len(content)))
+                self.end_headers()
+                self.wfile.write(content)
+                return
+            except Exception:
+                pass
+
+        self.send_response(404)
+        self._send_cors()
+        self.end_headers()
 
     def do_POST(self):
         parsed = urlparse(self.path)
